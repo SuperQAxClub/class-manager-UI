@@ -1,4 +1,3 @@
-import { useState } from 'react'
 import { Route, Router } from 'wouter'
 import { useHashLocation } from 'wouter/use-hash-location'
 import { HomePage } from './page/Home'

@@ -1,0 +1,24 @@
+// Transition
+$ios-transition: cubic-bezier(0.16, 1, 0.3, 1)
+$windows-transition: cubic-bezier(0.86,0,0.07,1)
+
+// Media size
+$media-list: 'xs' '(max-width: 576px)', 'sm' '(max-width: 768px)', 'sm-min' '(min-width: 768px)', 'md' '(max-width: 992px)', 'md-min' '(min-width: 992px)', 'lg' '(max-width: 1200px)', 'xl' '(max-width: 1400px)', 'xxl' '(min-width: 1400px)'
+@mixin media($type)
+  @each $media in $media-list
+    @if(nth($media,1) == $type)
+      @media #{nth($media,2)}
+        @content
+
+// Shadows
+@mixin floating-shadow
+  box-shadow: 0 0px 6px rgba(0,0,0,0.2)
+@mixin shadow-down
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1)
+@mixin shadow-up
+  box-shadow: 0 -2px 4px rgba(0,0,0,0.1)
+
+// Background
+@mixin blur-bg
+  background-color: rgba(256, 256, 256, 0.6)
+  backdrop-filter: blur(10px)
