@@ -1,8 +1,29 @@
 @use "../../assets/variables" as *
 
-.top-navbar
+.main-navbar
   position: fixed
   top: 0
   left: 0
   width: 100%
+  box-sizing: border-box
+  padding: 10px 15px
+  border-bottom: 1px solid $border-color
+  height: 53px
   @include blur-bg
+  @include shadow-down
+  .top-navbar
+    display: flex
+    align-items: center
+    max-width: 1400px
+    margin-left: auto
+    margin-right: auto
+    .navbar-left,
+    .navbar-right
+      display: inline-flex
+      align-items: center
+      .nav-item
+        .item-title
+          font-weight: 600
+          font-size: 15pt
+    .navbar-left
+      flex: 1

@@ -4,9 +4,11 @@ import './assets/fonts.css'
 import './assets/styles.sass'
 import App from './App.tsx'
 import { ConfigProvider } from 'antd'
+import { GoogleOAuthProvider } from '@react-oauth/google'
 
 createRoot(document.getElementById('root')!).render(
-  <StrictMode>
+  <GoogleOAuthProvider clientId='988287657072-25ishf15ja2jt0lfn47bbejqtm4hn2se.apps.googleusercontent.com'>
+    <StrictMode>
     <ConfigProvider
       theme={{
         token: {
@@ -16,5 +18,6 @@ createRoot(document.getElementById('root')!).render(
     >
       <App />
     </ConfigProvider>
-  </StrictMode>,
+  </StrictMode>
+  </GoogleOAuthProvider>,
 )
