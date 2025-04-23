@@ -1,0 +1,123 @@
+@use "../../assets/variables" as *
+
+.course-item
+  overflow: hidden
+  padding: 10px 15px
+  transition: all 200ms ease-in-out
+  outline: 3px solid transparent
+  cursor: pointer
+  @include main-box
+  @media (hover: hover) and (pointer: fine)
+    &:hover
+      outline-color: $main-color
+.item-header
+  border-bottom: 1px solid $border-color
+  padding-bottom: 15px
+  display: flex
+  align-items: center
+  gap: 15px
+  .header-left
+    flex: 1
+  .item-content
+    .item-title
+      font-size: 18pt
+      font-weight: 700
+    .item-tag
+      display: inline-flex
+      align-items: center
+      gap: 10px
+      .title-tag
+        background: $main-color
+        border-radius: 5px
+        padding: 2px 7px
+        text-transform: uppercase
+        color: #fff
+        font-weight: 600
+        &.red
+          background: $primary-red
+        &.green
+          background: $primary-light-green
+  .header-right
+    text-align: right
+  .item-room
+    font-size: 14pt
+  .item-slots
+    font-size: 14pt
+    text-align: center
+    b
+      color: $main-color
+.item-body
+  display: flex
+  .info-content
+    flex: 1
+    padding-right: 15px
+    .content-title
+      padding-top: 10px
+      font-size: 16pt
+      font-weight: 500
+    .content-desc
+      font-size: 12pt
+      &.limit-desc
+        display: -webkit-box
+        -webkit-box-orient: vertical
+        -webkit-line-clamp: 2
+        overflow: hidden
+
+.student-selector
+  border-top: 1px solid $border-color
+  padding-top: 10px
+  margin-top: 10px
+  .selector-title
+    font-size: 18pt
+    font-weight: 600
+    color: $main-color
+  .selector-list
+    .list-item
+      @include main-box
+      outline: 3px solid transparent
+      border-radius: 10px
+      margin: 10px 0
+      padding: 10px 15px
+      display: flex
+      align-items: center
+      gap: 15px
+      cursor: pointer
+      transition: all 200ms ease-in-out
+      .list-info
+        flex: 1
+        .info-name
+          font-size: 14pt
+          font-weight: 600
+          transition: all 200ms ease-in-out
+        .info-desc
+          font-size: 12pt
+          display: inline-block
+          transition: all 200ms ease-in-out
+        .info-error
+          font-size: 12pt
+          display: inline-block
+          color: $primary-red
+      .list-icon
+        font-size: 2em
+        opacity: 0
+        transition: all 200ms ease-in-out
+      &.selected
+        outline-color: $main-color
+        background: $main-light-color
+        color: $main-color
+        .list-icon
+          opacity: 1
+          color: $main-color
+      &.disabled
+        background: $primary-light-grey
+        opacity: 0.6
+        pointer-events: none
+      &.invalid
+        opacity: 0.6
+        pointer-events: none
+        border-color: $primary-red
+        background: $primary-light-red
+        color: $primary-red
+        .list-icon
+          opacity: 1
+          color: $primary-red

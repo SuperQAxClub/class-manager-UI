@@ -1,6 +1,31 @@
 // Color
+$primary-red: #D4212A
+$primary-dark-red: #A81A21
+$primary-light-red: #fff4f4
+$primary-blue: #4EC2DF
+$primary-light-blue: #7FD2E6
+$primary-light-green: #00BD9D
+$primary-semi-light-green: #f4fffd
+$primary-dark-green: #388E3C
+$primary-white: #FFFFFF
+$primary-grape: #5D3754
+$primary-light-grape: #D6CCD4
+$primary-dark-grey: #6D7A96
+$primary-light-grey: #E2E4EA
+$primary-black: #1E283C
+$primary-extra-light-gray: #F5F5F5
+$primary-indigo: #3F51B5
+$primary-pink: #E91E63
+$primary-yellow: #ECF598
+$primary-orange: #e07f00
+$primary-light-orange: #fff6eb
 $main-color: #1677ff
-$border-color: #c4c4c4
+$main-light-color: #e4efff
+$border-color: #DBD6D0
+// Neumorphism
+$neumorp-bg: rgba(0,0,0,.02)
+$neumorp-border: rgba(0,0,0,.1)
+$neumorp-sub-border: rgba(0,0,0,.08)
   
 // Transition
 $ios-transition: cubic-bezier(0.16, 1, 0.3, 1)
@@ -26,3 +51,8 @@ $media-list: 'xs' '(max-width: 576px)', 'sm' '(max-width: 768px)', 'sm-min' '(mi
 @mixin blur-bg
   background-color: rgba(256, 256, 256, 0.8)
   backdrop-filter: blur(10px)
+@mixin main-box
+  background-color: #fff
+  border: 1px solid $border-color
+  border-radius: 10px
+  @include floating-shadow
