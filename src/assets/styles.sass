@@ -3,6 +3,7 @@
 body
   margin: 0
   font-family: 'National Park', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol'!important
+  font-size: 14pt
 .main-container
   padding: 15px
   padding-top: calc(53px + 15px)
@@ -23,5 +24,17 @@ body
     border-radius: 10px
     padding: 15px
     overflow: hidden
+    box-sizing: border-box
+    width: 400px
+    max-width: calc(100vw - 30px)
     @include floating-shadow
     @include blur-bg
+    .login-title
+      font-size: 20pt
+      font-weight: 700
+      color: $main-color
+      text-align: center
+    .login-desc
+      text-align: center
+      padding-top: 10px
+      padding-bottom: 15px
