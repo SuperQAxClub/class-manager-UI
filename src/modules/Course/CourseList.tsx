@@ -30,6 +30,7 @@ const CourseItems:FC = () => {
                       </div>
                       <div className="item-tag">
                         <div className="title-tag red">Chuyên</div>
+                        <div className="title-tag">2.500.000đ</div>
                         <div className="title-tag green">Sắp tới</div>
                       </div>
                     </div>
@@ -70,6 +71,7 @@ const CourseItems:FC = () => {
         onCancel={() => closeRegisterModal()}
         okText="Đăng ký"
         cancelText="Huỷ"
+        width={800}
         centered
       >
         <div className="modal-scroll-container">
@@ -83,6 +85,7 @@ const CourseItems:FC = () => {
                     </div>
                     <div className="item-tag">
                       <div className="title-tag red">Chuyên</div>
+                      <div className="title-tag">2.500.000đ</div>
                       <div className="title-tag green">Sắp tới</div>
                     </div>
                   </div>
@@ -117,42 +120,52 @@ const CourseItems:FC = () => {
                 Chọn học sinh tham gia khoá học
               </div>
               <div className="selector-list">
-                <div className="list-item">
-                  <div className="list-info">
-                    <div className="info-name">Nguyễn Văn A</div>
-                    <div className="info-desc">Khối 9</div>
-                  </div>
-                  <div className="list-icon">
-                    <FontAwesomeIcon icon={faCircleCheck} />
-                  </div>
-                </div>
-                <div className="list-item selected">
-                  <div className="list-info">
-                    <div className="info-name">Nguyễn Văn A1</div>
-                    <div className="info-desc">Khối 9</div>
-                  </div>
-                  <div className="list-icon">
-                    <FontAwesomeIcon icon={faCircleCheck} />
-                  </div>
-                </div>
-                <div className="list-item disabled">
-                  <div className="list-info">
-                    <div className="info-name">Nguyễn Văn B</div>
-                    <div className="info-desc">Khối 9</div>
-                    <div className="info-error">&nbsp;- Đã đăng ký</div>
-                  </div>
-                  <div className="list-icon"></div>
-                </div>
-                <div className="list-item invalid">
-                  <div className="list-info">
-                    <div className="info-name">Nguyễn Văn C</div>
-                    <div className="info-desc">Khối 6</div>
-                    <div className="info-error">&nbsp;- Khối không phù hợp</div>
-                  </div>
-                  <div className="list-icon">
-                    <FontAwesomeIcon icon={faCircleXmark} />
-                  </div>
-                </div>
+                <Row gutter={[16,16]}>
+                  <Col xs={24} sm={12}>
+                    <div className="list-item">
+                      <div className="list-info">
+                        <div className="info-name">Nguyễn Văn A</div>
+                        <div className="info-desc">Khối 9</div>
+                      </div>
+                      <div className="list-icon">
+                        <FontAwesomeIcon icon={faCircleCheck} />
+                      </div>
+                    </div>
+                  </Col>
+                  <Col xs={24} sm={12}>
+                    <div className="list-item selected">
+                      <div className="list-info">
+                        <div className="info-name">Nguyễn Văn A1</div>
+                        <div className="info-desc">Khối 9</div>
+                      </div>
+                      <div className="list-icon">
+                        <FontAwesomeIcon icon={faCircleCheck} />
+                      </div>
+                    </div>
+                  </Col>
+                  <Col xs={24} sm={12}>
+                    <div className="list-item disabled">
+                      <div className="list-info">
+                        <div className="info-name">Nguyễn Văn B</div>
+                        <div className="info-desc">Khối 9</div>
+                        <div className="info-error">&nbsp;- Đã đăng ký</div>
+                      </div>
+                      <div className="list-icon"></div>
+                    </div>
+                  </Col>
+                  <Col xs={24} sm={12}>
+                    <div className="list-item invalid">
+                      <div className="list-info">
+                        <div className="info-name">Nguyễn Văn C</div>
+                        <div className="info-desc">Khối 6</div>
+                        <div className="info-error">&nbsp;- Khối không phù hợp</div>
+                      </div>
+                      <div className="list-icon">
+                        <FontAwesomeIcon icon={faCircleXmark} />
+                      </div>
+                    </div>
+                  </Col>
+                </Row>
               </div>
             </div>
           </div>

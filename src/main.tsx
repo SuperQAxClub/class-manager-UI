@@ -5,6 +5,7 @@ import './assets/styles.sass'
 import App from './App.tsx'
 import { ConfigProvider } from 'antd'
 import { GoogleOAuthProvider } from '@react-oauth/google'
+import '@ant-design/v5-patch-for-react-19';
 
 createRoot(document.getElementById('root')!).render(
   <GoogleOAuthProvider clientId='988287657072-25ishf15ja2jt0lfn47bbejqtm4hn2se.apps.googleusercontent.com'>

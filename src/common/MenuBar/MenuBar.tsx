@@ -8,13 +8,16 @@ export const MenuBar:FC = () => {
       <div className="top-navbar">
         <div className="navbar-left">
           <div className="nav-item">
-            <div className="item-title">Lớp học Mr.Tùng</div>
+            <div className="item-title">BTGROUP</div>
           </div>
         </div>
         <div className="navbar-right">
           <div className="nav-item">
             <Button color="primary" variant="solid">
               Đăng ký khoá học
+            </Button>
+            <Button color="primary" variant="text">
+              Quản lý thông tin
             </Button>
             <Button color="primary" variant="text">
               Liên hệ

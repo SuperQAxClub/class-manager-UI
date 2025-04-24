@@ -3,6 +3,7 @@ import { useHashLocation } from 'wouter/use-hash-location'
 import { HomePage } from './page/Home'
 import { LoginPage } from './page/Login'
 import { CoursePage } from './page/Course'
+import { ProfilePage } from './page/Profile'
 
 function App() {
 
@@ -10,6 +11,7 @@ function App() {
     <Router base='/' hook={useHashLocation}>
       <Route path={"/"} component={HomePage} />
       <Route path={"/course"} component={CoursePage} />
+      <Route path={"/profile"} component={ProfilePage} />
       <Route path={"/login"} component={LoginPage} />
     </Router>
   )

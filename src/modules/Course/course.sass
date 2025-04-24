@@ -71,12 +71,12 @@
     font-size: 18pt
     font-weight: 600
     color: $main-color
+    margin-bottom: 15px
   .selector-list
     .list-item
       @include main-box
       outline: 3px solid transparent
       border-radius: 10px
-      margin: 10px 0
       padding: 10px 15px
       display: flex
       align-items: center
@@ -121,3 +121,6 @@
         .list-icon
           opacity: 1
           color: $primary-red
+      @media (hover: hover) and (pointer: fine)
+        &:hover
+          border-color: $main-color
