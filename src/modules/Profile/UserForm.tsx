@@ -1,7 +1,9 @@
-import { Form, Input, Select, Button, Space, Card } from 'antd';
+import { Form, Input, Select, Button, Space, Card, Row, Col } from 'antd';
 import { PlusOutlined, MinusCircleOutlined } from '@ant-design/icons';
-import type { Rule } from 'antd/es/form';
+import "./form.sass";
 import { FC } from 'react';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faTrash } from '@fortawesome/free-solid-svg-icons';
 
 const { Option } = Select;
 
@@ -46,126 +48,139 @@ export const UserFormComponent:FC = () => {
       onFinish={onFinish}
       initialValues={{ students: [] }}
     >
-      {/* === Thông tin phụ huynh === */}
-      <Form.Item
-        label="Tên phụ huynh"
-        name="name"
-        rules={[{ required: true, message: 'Vui lòng nhập tên' }]}
-      >
-        <Input placeholder="Nhập tên phụ huynh" />
-      </Form.Item>
+      <Row gutter={16}>
+        <Col xs={24} sm={12}>
+          <Form.Item
+            label="Tên phụ huynh"
+            name="name"
+            rules={[{ required: true, message: 'Vui lòng nhập tên' }]}
+          >
+            <Input placeholder="Nhập tên phụ huynh" />
+          </Form.Item>
+        </Col>
+        <Col xs={24} sm={6} lg={5}>
+          <Form.Item
+            label="Quan hệ với học sinh"
+            name="relationship"
+            rules={[{ required: true, message: 'Vui lòng chọn quan hệ' }]}
+          >
+            <Select placeholder="Chọn quan hệ">
+              <Option value="father">Cha</Option>
+              <Option value="mother">Mẹ</Option>
+              <Option value="guardian">Người giám hộ</Option>
+            </Select>
+          </Form.Item>
+        </Col>
+        <Col xs={24} sm={6} lg={7}>
+          <Form.Item
+            label="Số điện thoại"
+            name="phone"
+            rules={[
+              { required: true, message: 'Vui lòng nhập số điện thoại' },
+              { pattern: vietnamPhoneRegex, message: 'Số điện thoại không hợp lệ' },
+            ]}
+          >
+            <Input placeholder="Nhập số điện thoại" />
+          </Form.Item>
+        </Col>
+      </Row>
 
-      <Form.Item
-        label="Quan hệ với học sinh"
-        name="relationship"
-        rules={[{ required: true, message: 'Vui lòng chọn quan hệ' }]}
-      >
-        <Select placeholder="Chọn quan hệ">
-          <Option value="father">Cha</Option>
-          <Option value="mother">Mẹ</Option>
-          <Option value="guardian">Người giám hộ</Option>
-        </Select>
-      </Form.Item>
-
-      <Form.Item
-        label="Số điện thoại"
-        name="phone"
-        rules={[
-          { required: true, message: 'Vui lòng nhập số điện thoại' },
-          { pattern: vietnamPhoneRegex, message: 'Số điện thoại không hợp lệ' },
-        ]}
-      >
-        <Input placeholder="0xxxxxxxxx hoặc +84xxxxxxxxx" />
-      </Form.Item>
-
-      {/* === Danh sách học sinh === */}
       <Form.List name="students">
         {(fields, { add, remove }) => (
           <>
             {fields.map(({ key, name, ...restField }) => (
-              <Card
+              <div
                 key={key}
-                size="small"
-                title={`Học sinh #${name + 1}`}
-                style={{ marginBottom: 16 }}
-                extra={
-                  <MinusCircleOutlined
-                    onClick={() => remove(name)}
-                    style={{ fontSize: 16, color: 'red' }}
-                  />
-                }
+                className='student-form-container'
               >
-                {/* Trường */}
-                <Form.Item
-                  {...restField}
-                  label="Trường"
-                  name={[name, 'school']}
-                  rules={[{ required: true, message: 'Vui lòng chọn trường' }]}
-                >
-                  <Select placeholder="Chọn trường">
-                    <Option value="saigon">Trường Trung học Thực hành Sài Gòn</Option>
-                    <Option value="other">Khác</Option>
-                  </Select>
-                </Form.Item>
-
-                {/* Khối */}
-                <Form.Item
-                  {...restField}
-                  label="Khối"
-                  name={[name, 'grade']}
-                  rules={[{ required: true, message: 'Vui lòng chọn khối' }]}
-                >
-                  <Select placeholder="Chọn khối">
-                    <Option value={6}>Khối 6</Option>
-                    <Option value={7}>Khối 7</Option>
-                    <Option value={8}>Khối 8</Option>
-                    <Option value={9}>Khối 9</Option>
-                  </Select>
-                </Form.Item>
-
-                {/* Lớp: chỉ hiển thị khi chọn trường saigon */}
-                <Form.Item
-                  noStyle
-                  dependencies={[['students', name, 'school'], ['students', name, 'grade']]}
-                >
+                <div className='form-header'>
+                  <div className='header-title'>Học sinh {name + 1}</div>
+                  <div className='header-action'>
+                    <Button
+                      color='danger' variant='solid' size='small'
+                      icon={<FontAwesomeIcon icon={faTrash} />}
+                      onClick={() => remove(name)}
+                    >Xoá học sinh</Button>
+                  </div>
+                </div>
+                <Form.Item shouldUpdate>
                   {({ getFieldValue }) => {
                     const school = getFieldValue(['students', name, 'school']);
                     const grade = getFieldValue(['students', name, 'grade']) as Grade;
-                    return school === 'saigon' ? (
-                      <Form.Item
-                        {...restField}
-                        label="Lớp"
-                        name={[name, 'class']}
-                        rules={[{ required: true, message: 'Vui lòng chọn lớp' }]}
-                      >
-                        <Select placeholder="Chọn lớp">
-                          {classOptions[grade]?.map((cls) => (
-                            <Option key={cls} value={cls}>
-                              {cls}
-                            </Option>
-                          ))}
-                        </Select>
-                      </Form.Item>
-                    ) : null;
+                    return (
+                      <Row gutter={16}>
+                        <Col xs={24} sm={10} lg={8}>
+                          {/* Trường */}
+                          <Form.Item
+                            {...restField}
+                            label="Trường"
+                            name={[name, 'school']}
+                            rules={[{ required: true, message: 'Vui lòng chọn trường' }]}
+                          >
+                            <Select placeholder="Chọn trường">
+                              <Option value="saigon">Trường Trung học Thực hành Sài Gòn</Option>
+                              <Option value="other">Khác</Option>
+                            </Select>
+                          </Form.Item>
+                        </Col>
+                        <Col xs={24} sm={4}>
+                          {/* Khối */}
+                          <Form.Item
+                            {...restField}
+                            label="Khối"
+                            name={[name, 'grade']}
+                            rules={[{ required: true, message: 'Vui lòng chọn khối' }]}
+                          >
+                            <Select placeholder="Chọn khối">
+                              <Option value={6}>Khối 6</Option>
+                              <Option value={7}>Khối 7</Option>
+                              <Option value={8}>Khối 8</Option>
+                              <Option value={9}>Khối 9</Option>
+                            </Select>
+                          </Form.Item>
+                        </Col>
+                        {school === "saigon" ? (
+                          <Col xs={24} sm={4}>
+                            <Form.Item
+                              {...restField}
+                              label="Lớp"
+                              name={[name, 'class']}
+                              rules={[{ required: true, message: 'Vui lòng chọn lớp' }]}
+                              dependencies={[['students', name, 'school'], ['students', name, 'grade']]}
+                            >
+                              <Select placeholder="Chọn lớp">
+                                {classOptions[grade]?.map((cls) => (
+                                  <Option key={cls} value={cls}>
+                                    {cls}
+                                  </Option>
+                                ))}
+                              </Select>
+                            </Form.Item>
+                          </Col>
+                        ) : ""}
+                        <Col xs={24} sm={school === "saigon" ? 6 : 12} lg={school === "saigon" ? 8 : 12}>
+                          {/* Tên học sinh */}
+                          <Form.Item
+                            {...restField}
+                            label="Tên học sinh"
+                            name={[name, 'studentName']}
+                            rules={[{ required: true, message: 'Vui lòng nhập tên học sinh' }]}
+                          >
+                            <Input placeholder="Nhập tên học sinh" />
+                          </Form.Item>
+                        </Col>
+                      </Row>
+                    )
                   }}
                 </Form.Item>
-
-                {/* Tên học sinh */}
-                <Form.Item
-                  {...restField}
-                  label="Tên học sinh"
-                  name={[name, 'studentName']}
-                  rules={[{ required: true, message: 'Vui lòng nhập tên học sinh' }]}
-                >
-                  <Input placeholder="Nhập tên học sinh" />
-                </Form.Item>
-              </Card>
+              </div>
             ))}
 
             <Form.Item>
               <Button
-                type="dashed"
+                variant="dashed"
                 onClick={() => add()}
+                color="primary"
                 block
                 icon={<PlusOutlined />}
               >
@@ -177,9 +192,9 @@ export const UserFormComponent:FC = () => {
       </Form.List>
 
       {/* Nút gửi form */}
-      <Form.Item>
+      <Form.Item style={{marginBottom: 0}}>
         <Button type="primary" htmlType="submit">
-          Gửi tất cả
+          Lưu thông tin
         </Button>
       </Form.Item>
     </Form>

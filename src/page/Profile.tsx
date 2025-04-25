@@ -8,6 +8,7 @@ export const ProfilePage:FC = () => {
       <MenuBar />
       <div className="main-container">
         <div className="box-container">
+          <div className="box-title">Khai báo phụ huynh và học sinh</div>
           <UserFormComponent />
         </div>
       </div>
