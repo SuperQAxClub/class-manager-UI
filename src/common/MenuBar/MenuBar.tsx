@@ -1,6 +1,7 @@
 import { Button } from "antd";
 import "./menu.sass"
 import { FC } from "react";
+import { Link } from "wouter";
 
 export const MenuBar:FC = () => {
   return (
@@ -19,6 +20,11 @@ export const MenuBar:FC = () => {
             <Button color="primary" variant="text">
               Quản lý thông tin
             </Button>
+            <Link to="login">
+              <Button color="primary" variant="text">
+                Đăng nhập
+              </Button>
+            </Link>
             <Button color="primary" variant="text">
               Liên hệ
             </Button>
