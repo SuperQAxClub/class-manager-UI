@@ -1,7 +1,7 @@
 import { Form, Input, Select, Button, Space, Card, Row, Col } from 'antd';
 import { PlusOutlined, MinusCircleOutlined } from '@ant-design/icons';
 import "./form.sass";
-import { FC } from 'react';
+import { FC, useEffect } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTrash } from '@fortawesome/free-solid-svg-icons';
 
@@ -9,7 +9,7 @@ const { Option } = Select;
 
 export type ParentFormValues = {
   name: string;
-  gender: string;
+  gender?: string;
   phone: string;
   students: Student[];
 }
@@ -43,13 +43,17 @@ export const UserFormComponent:FC<UserFormComponentType> = ({
 }) => {
   const [form] = Form.useForm<ParentFormValues>();
 
+  useEffect(() => {
+    form.resetFields();
+  }, [defaultValues])
+
   return (
     <Form
       form={form}
       name="parentStudentForm"
       layout="vertical"
       onFinish={submitForm}
-      initialValues={{ defaultValues }}
+      initialValues={ defaultValues }
     >
       <Row gutter={16}>
         <Col xs={24} sm={12}>
