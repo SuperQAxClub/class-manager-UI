@@ -1,9 +1,10 @@
 import { Form, Input, Select, Button, Space, Card, Row, Col } from 'antd';
 import { PlusOutlined, MinusCircleOutlined } from '@ant-design/icons';
 import "./form.sass";
-import { FC, useEffect } from 'react';
+import { FC, useEffect, useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTrash } from '@fortawesome/free-solid-svg-icons';
+import { getSchoolList } from '../../api/school';
 
 const { Option } = Select;
 
@@ -17,9 +18,10 @@ export type ParentFormValues = {
 type Grade = 6 | 7 | 8 | 9;
 
 export type Student = {
-  school: 'saigon' | 'other';
+  school: string;
   grade: Grade;
   gender: string;
+  studentCode?:string;
   class?: string;
   studentName: string;
 }
@@ -38,10 +40,32 @@ type UserFormComponentType = {
   submitForm: (values:ParentFormValues) => void
 }
 
+export type MenuType = {
+  value: string,
+  label: string
+}
+
 export const UserFormComponent:FC<UserFormComponentType> = ({
   defaultValues, submitForm
 }) => {
   const [form] = Form.useForm<ParentFormValues>();
+  const [schoolMenu, setSchoolMenu] = useState<MenuType[]>([]);
+
+  useEffect(() => {
+    const getSchool = async() => {
+      const schoolList = await getSchoolList();
+      let tmpSchoolMenu:MenuType[] = schoolList.map(school => {return {
+        value: school.id,
+        label: school.name
+      }})
+      tmpSchoolMenu.push({
+        value: "other",
+        label: "Khác"
+      })
+      setSchoolMenu(tmpSchoolMenu);
+    }
+    getSchool();
+  }, [])
 
   useEffect(() => {
     form.resetFields();
@@ -60,7 +84,7 @@ export const UserFormComponent:FC<UserFormComponentType> = ({
           <Form.Item
             label="Tên phụ huynh"
             name="name"
-            rules={[{ required: true, message: 'Vui lòng nhập tên' }]}
+            rules={[{ required: true, message: 'Hãy nhập tên' }]}
           >
             <Input placeholder="Nhập tên phụ huynh" />
           </Form.Item>
@@ -69,7 +93,7 @@ export const UserFormComponent:FC<UserFormComponentType> = ({
           <Form.Item
             label="Giới tính"
             name="gender"
-            rules={[{ required: true, message: 'Vui lòng chọn giới tính' }]}
+            rules={[{ required: true, message: 'Hãy chọn giới tính' }]}
           >
             <Select placeholder="Chọn giới tính">
               <Option value="male">Nam</Option>
@@ -82,7 +106,7 @@ export const UserFormComponent:FC<UserFormComponentType> = ({
             label="Số điện thoại"
             name="phone"
             rules={[
-              { required: true, message: 'Vui lòng nhập số điện thoại' },
+              { required: true, message: 'Hãy nhập số điện thoại' },
               { pattern: vietnamPhoneRegex, message: 'Số điện thoại không hợp lệ' },
             ]}
           >
@@ -115,29 +139,43 @@ export const UserFormComponent:FC<UserFormComponentType> = ({
                     const grade = getFieldValue(['students', name, 'grade']) as Grade;
                     return (
                       <Row gutter={16}>
-                        <Col xs={24} sm={8} lg={8}>
+                        <Col xs={24} sm={10}>
                           {/* Trường */}
                           <Form.Item
                             {...restField}
                             label="Trường"
                             name={[name, 'school']}
-                            rules={[{ required: true, message: 'Vui lòng chọn trường' }]}
+                            rules={[{ required: true, message: 'Hãy chọn trường' }]}
                           >
-                            <Select placeholder="Chọn trường">
-                              <Option value="saigon">Trường Trung học Thực hành Sài Gòn</Option>
-                              <Option value="other">Khác</Option>
-                            </Select>
+                            {schoolMenu.length ? (
+                              <Select placeholder="Chọn trường">
+                                {schoolMenu.map(school => (
+                                  <Option value={school.value}>{school.label}</Option>
+                                ))}
+                              </Select>
+                            ) : ""}
                           </Form.Item>
                         </Col>
-                        <Col xs={24} sm={3}>
+                        <Col xs={24} sm={school !== "other" ? 14 : 8}>
+                          {/* Tên học sinh */}
+                          <Form.Item
+                            {...restField}
+                            label="Tên học sinh"
+                            name={[name, 'studentName']}
+                            rules={[{ required: true, message: 'Hãy nhập tên học sinh' }]}
+                          >
+                            <Input placeholder="Nhập tên học sinh" />
+                          </Form.Item>
+                        </Col>
+                        <Col xs={24} sm={school !== "other" ? 4 : 3}>
                           {/* Khối */}
                           <Form.Item
                             {...restField}
                             label="Khối"
                             name={[name, 'grade']}
-                            rules={[{ required: true, message: 'Vui lòng chọn khối' }]}
+                            rules={[{ required: true, message: 'Hãy chọn khối' }]}
                           >
-                            <Select placeholder="Chọn khối">
+                            <Select placeholder="Khối">
                               <Option value={6}>Khối 6</Option>
                               <Option value={7}>Khối 7</Option>
                               <Option value={8}>Khối 8</Option>
@@ -145,16 +183,16 @@ export const UserFormComponent:FC<UserFormComponentType> = ({
                             </Select>
                           </Form.Item>
                         </Col>
-                        {school === "saigon" ? (
-                          <Col xs={24} sm={3}>
+                        {school !== "other" ? (
+                          <Col xs={24} sm={4}>
                             <Form.Item
                               {...restField}
                               label="Lớp"
                               name={[name, 'class']}
-                              rules={[{ required: true, message: 'Vui lòng chọn lớp' }]}
-                              dependencies={[['students', name, 'school'], ['students', name, 'grade']]}
+                              rules={[{ required: true, message: 'Hãy chọn lớp' }]}
+                              dependencies={[['students'], ['students']]}
                             >
-                              <Select placeholder="Chọn lớp">
+                              <Select placeholder="Lớp">
                                 {classOptions[grade]?.map((cls) => (
                                   <Option key={cls} value={cls}>
                                     {cls}
@@ -164,31 +202,33 @@ export const UserFormComponent:FC<UserFormComponentType> = ({
                             </Form.Item>
                           </Col>
                         ) : ""}
-                        <Col xs={24} sm={school === "saigon" ? 6 : 9} lg={school === "saigon" ? 7 : 10}>
-                          {/* Tên học sinh */}
-                          <Form.Item
-                            {...restField}
-                            label="Tên học sinh"
-                            name={[name, 'studentName']}
-                            rules={[{ required: true, message: 'Vui lòng nhập tên học sinh' }]}
-                          >
-                            <Input placeholder="Nhập tên học sinh" />
-                          </Form.Item>
-                        </Col>
-                        <Col xs={24} sm={4} lg={3}>
+                        <Col xs={24} sm={school !== "other" ? 4 : 3}>
                           {/* Giới tính */}
                           <Form.Item
                             {...restField}
                             label="Giới tính"
                             name={[name, 'gender']}
-                            rules={[{ required: true, message: 'Vui lòng chọn giới tính' }]}
+                            rules={[{ required: true, message: 'Hãy chọn giới tính' }]}
                           >
-                            <Select placeholder="Chọn giới tính">
+                            <Select placeholder="Giới tính">
                               <Option value="male">Nam</Option>
                               <Option value="female">Nữ</Option>
                             </Select>
                           </Form.Item>
                         </Col>
+                        {school !== "other" ? (
+                          <Col xs={24} sm={12}>
+                            <Form.Item
+                              {...restField}
+                              label="Mã học sinh"
+                              name={[name, 'studentCode']}
+                              rules={[{ required: true, message: 'Hãy nhập mã học sinh' }]}
+                              dependencies={[['students', name, 'school'], ['students', name, 'grade']]}
+                            >
+                              <Input placeholder="Nhập mã học sinh" />
+                            </Form.Item>
+                          </Col>
+                        ) : ""}
                       </Row>
                     )
                   }}
