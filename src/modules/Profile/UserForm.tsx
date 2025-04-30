@@ -54,7 +54,7 @@ export const UserFormComponent:FC<UserFormComponentType> = ({
   useEffect(() => {
     const getSchool = async() => {
       const schoolList = await getSchoolList();
-      let tmpSchoolMenu:MenuType[] = schoolList.map(school => {return {
+      const tmpSchoolMenu:MenuType[] = schoolList.map(school => {return {
         value: school.id,
         label: school.name
       }})

@@ -10,6 +10,8 @@
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
     "baseUrl": ".",
-    "paths": {},  
+    "paths": {}, 
+    "noUnusedLocals": false,
+    "noUnusedParameters": false,
   }
 }

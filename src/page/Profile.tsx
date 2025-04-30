@@ -9,7 +9,7 @@ export const ProfilePage:FC = () => {
       <div className="main-container">
         <div className="box-container">
           <div className="box-title">Khai báo phụ huynh và học sinh</div>
-          <UserFormComponent />
+          {/* <UserFormComponent /> */}
         </div>
       </div>
     </>
