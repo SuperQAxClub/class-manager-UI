@@ -10,16 +10,14 @@ const { Option } = Select;
 
 export type ParentFormValues = {
   name: string;
-  gender?: string;
+  gender: string;
   phone: string;
   students: Student[];
 }
 
-type Grade = 6 | 7 | 8 | 9;
-
 export type Student = {
   school: string;
-  grade: Grade;
+  grade: string;
   gender: string;
   studentCode?:string;
   class?: string;
