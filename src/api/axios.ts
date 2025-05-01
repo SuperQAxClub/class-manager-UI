@@ -1,5 +1,11 @@
 import axios, { AxiosInstance, AxiosRequestConfig, Method } from 'axios';
 
+interface RequestOptions {
+  data?: unknown;
+  params?: Record<string, any>;
+  config?: AxiosRequestConfig;
+}
+
 // base URL for all requests (set via your .env)
 
 const axiosInstance: AxiosInstance = axios.create({
@@ -21,15 +27,18 @@ export function setBearerToken(token: string | null) {
 export async function apiRequest<T = any>(
   method: Method,
   url: string,
-  data?: unknown,
-  config?: AxiosRequestConfig
+  opts: RequestOptions = {}
 ): Promise<T> {
+  const { data, params, config } = opts;
+
   const response = await axiosInstance.request<T>({
     method,
     url,
     data,
+    params,
     ...config,
   });
+
   return response.data;
 }
 

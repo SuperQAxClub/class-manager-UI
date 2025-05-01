@@ -4,7 +4,7 @@ import "./form.sass";
 import { FC, useEffect, useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTrash } from '@fortawesome/free-solid-svg-icons';
-import { getSchoolList } from '../../api/school';
+import { requestSchoolGrade, requestSchoolList, requestSchoolClass, SchoolClassResponse } from '../../api/school';
 
 const { Option } = Select;
 
@@ -28,13 +28,6 @@ export type Student = {
 
 const vietnamPhoneRegex = /^(0|\+84)(3[2-9]|5[6,8,9]|7[0,6-9]|8[1-5]|9[0-9])[0-9]{7}$/;
 
-const classOptions: Record<Grade, string[]> = {
-  6: ['6A1', '6A2', '6A3'],
-  7: ['7A1', '7A2', '7A3'],
-  8: ['8A1', '8A2', '8A3'],
-  9: ['9A1', '9A2', '9A3'],
-};
-
 type UserFormComponentType = {
   defaultValues:ParentFormValues,
   submitForm: (values:ParentFormValues) => void
@@ -50,21 +43,58 @@ export const UserFormComponent:FC<UserFormComponentType> = ({
 }) => {
   const [form] = Form.useForm<ParentFormValues>();
   const [schoolMenu, setSchoolMenu] = useState<MenuType[]>([]);
+  const [schoolGradeMenu, setSchoolGradeMenu] = useState<MenuType[]>([]);
+  const [schoolClass, setSchoolClass] = useState<SchoolClassResponse[]>([]);
+  const [schoolClassMenu, setSchoolClassMenu] = useState<MenuType[]>([]);
+
+  // Get data
+  const getSchool = async() => {
+    const schoolList = await requestSchoolList();
+    const tmpSchoolMenu:MenuType[] = schoolList.map(school => {return {
+      value: school.id,
+      label: school.name
+    }})
+    tmpSchoolMenu.push({
+      value: "other",
+      label: "Khác"
+    })
+    setSchoolMenu(tmpSchoolMenu);
+  }
+  const getSchoolGrade = async() => {
+    const grade = await requestSchoolGrade();
+    const tmpSchoolGrade:MenuType[] = grade.map(grade => {return {
+      value: grade.id,
+      label: grade.grade.toString()
+    }})
+    setSchoolGradeMenu(tmpSchoolGrade);
+  }
+  const getSchoolClass = async(schoolId:string, gradeId?:string) => {
+    if(schoolId && schoolId !== "other") {
+      const currentSchoolClass = await requestSchoolClass(schoolId);
+      setSchoolClass(currentSchoolClass);
+      if(gradeId) {
+        filterSchoolClass(gradeId)
+      }
+    }
+  }
+  const filterSchoolClass = async(gradeId:string) => {
+    if(schoolClass.length) {
+      const tmpSchoolClass:MenuType[] = [];
+      schoolClass.forEach(schoolClass => {
+        if(schoolClass.grade_id === gradeId) {
+          tmpSchoolClass.push({
+            value: schoolClass.id,
+            label: schoolClass.name
+          })
+        }
+      })
+      setSchoolClassMenu(tmpSchoolClass);
+    }
+  }
 
   useEffect(() => {
-    const getSchool = async() => {
-      const schoolList = await getSchoolList();
-      const tmpSchoolMenu:MenuType[] = schoolList.map(school => {return {
-        value: school.id,
-        label: school.name
-      }})
-      tmpSchoolMenu.push({
-        value: "other",
-        label: "Khác"
-      })
-      setSchoolMenu(tmpSchoolMenu);
-    }
     getSchool();
+    getSchoolGrade();
   }, [])
 
   useEffect(() => {
@@ -136,7 +166,7 @@ export const UserFormComponent:FC<UserFormComponentType> = ({
                 <Form.Item shouldUpdate>
                   {({ getFieldValue }) => {
                     const school = getFieldValue(['students', name, 'school']);
-                    const grade = getFieldValue(['students', name, 'grade']) as Grade;
+                    const grade = getFieldValue(['students', name, 'grade']);
                     return (
                       <Row gutter={16}>
                         <Col xs={24} sm={10}>
@@ -148,15 +178,15 @@ export const UserFormComponent:FC<UserFormComponentType> = ({
                             rules={[{ required: true, message: 'Hãy chọn trường' }]}
                           >
                             {schoolMenu.length ? (
-                              <Select placeholder="Chọn trường">
-                                {schoolMenu.map(school => (
-                                  <Option value={school.value}>{school.label}</Option>
+                              <Select placeholder="Chọn trường" onChange={(selectedSchool) => getSchoolClass(selectedSchool, grade)}>
+                                {schoolMenu.map(item => (
+                                  <Option value={item.value}>{item.label}</Option>
                                 ))}
                               </Select>
                             ) : ""}
                           </Form.Item>
                         </Col>
-                        <Col xs={24} sm={school !== "other" ? 14 : 8}>
+                        <Col xs={24} sm={school && school !== "other" ? 14 : 8}>
                           {/* Tên học sinh */}
                           <Form.Item
                             {...restField}
@@ -167,7 +197,7 @@ export const UserFormComponent:FC<UserFormComponentType> = ({
                             <Input placeholder="Nhập tên học sinh" />
                           </Form.Item>
                         </Col>
-                        <Col xs={24} sm={school !== "other" ? 4 : 3}>
+                        <Col xs={24} sm={school && school !== "other" ? 4 : 3}>
                           {/* Khối */}
                           <Form.Item
                             {...restField}
@@ -175,34 +205,32 @@ export const UserFormComponent:FC<UserFormComponentType> = ({
                             name={[name, 'grade']}
                             rules={[{ required: true, message: 'Hãy chọn khối' }]}
                           >
-                            <Select placeholder="Khối">
-                              <Option value={6}>Khối 6</Option>
-                              <Option value={7}>Khối 7</Option>
-                              <Option value={8}>Khối 8</Option>
-                              <Option value={9}>Khối 9</Option>
-                            </Select>
+                            {schoolGradeMenu.length ? (
+                              <Select placeholder="Khối" onChange={filterSchoolClass}>
+                                {schoolGradeMenu.map(item => (
+                                  <Option value={item.value}>{item.label}</Option>
+                                ))}
+                              </Select>
+                            ) : ""}
                           </Form.Item>
                         </Col>
-                        {school !== "other" ? (
+                        {school && school !== "other" ? (
                           <Col xs={24} sm={4}>
                             <Form.Item
                               {...restField}
                               label="Lớp"
                               name={[name, 'class']}
                               rules={[{ required: true, message: 'Hãy chọn lớp' }]}
-                              dependencies={[['students'], ['students']]}
                             >
                               <Select placeholder="Lớp">
-                                {classOptions[grade]?.map((cls) => (
-                                  <Option key={cls} value={cls}>
-                                    {cls}
-                                  </Option>
+                                {schoolClassMenu.map(item => (
+                                  <Option value={item.value}>{item.label}</Option>
                                 ))}
                               </Select>
                             </Form.Item>
                           </Col>
                         ) : ""}
-                        <Col xs={24} sm={school !== "other" ? 4 : 3}>
+                        <Col xs={24} sm={school && school !== "other" ? 4 : 3}>
                           {/* Giới tính */}
                           <Form.Item
                             {...restField}
@@ -216,7 +244,7 @@ export const UserFormComponent:FC<UserFormComponentType> = ({
                             </Select>
                           </Form.Item>
                         </Col>
-                        {school !== "other" ? (
+                        {school && school !== "other" ? (
                           <Col xs={24} sm={12}>
                             <Form.Item
                               {...restField}
