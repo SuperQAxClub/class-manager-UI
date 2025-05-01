@@ -3,7 +3,7 @@ import axios, { AxiosInstance, AxiosRequestConfig, Method } from 'axios';
 // base URL for all requests (set via your .env)
 
 const axiosInstance: AxiosInstance = axios.create({
-  baseURL: "/",
+  baseURL: import.meta.env.VITE_API,
   headers: {
     'Content-Type': 'application/json',
   },

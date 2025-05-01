@@ -6,6 +6,6 @@ export type SchoolResponse = {
 }
 
 export const getSchoolList = async() => {
-  const data = await apiRequest<SchoolResponse[]>("GET", "/api/school");
+  const data = await apiRequest<SchoolResponse[]>("GET", "/school");
   return data;
 }
