@@ -92,14 +92,16 @@ export const LoginPage:FC = () => {
         <div className="login-box">
           <div className="login-title">Đăng nhập</div>
           <div className="login-desc">Quý phụ huynh hãy đăng nhập để có thể đăng ký khoá học.</div>
-          <GoogleLogin
-            onSuccess={credentialResponse => {
-              handleGoogleLogin(credentialResponse);
-            }}
-            onError={() => {
-              openNotification("error", "Lỗi đăng nhập", "Đăng nhập bằng Google thất bại, hãy thử lại sau!")
-            }}
-          />
+          <div className="login-button-container">
+            <GoogleLogin
+              onSuccess={credentialResponse => {
+                handleGoogleLogin(credentialResponse);
+              }}
+              onError={() => {
+                openNotification("error", "Lỗi đăng nhập", "Đăng nhập bằng Google thất bại, hãy thử lại sau!")
+              }}
+            />
+          </div>
         </div>
       )}
     </div>
