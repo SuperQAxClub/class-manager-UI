@@ -1,4 +1,4 @@
-import { apiRequest } from "./axios";
+import { ApiError, apiRequest } from "./axios";
 
 export type CreateProfileStudentRequest = {
   name: string,
@@ -18,12 +18,31 @@ export type CreateProfileRequest = {
   studentList: CreateProfileStudentRequest[]
 }
 
-export type SessionResponse = {
+export type ProfileType = {
+  id: string,
+  name: string,
+  mobile: string,
+  gender: string,
+  avatar_url: string,
+  email: string,
+  google_id: string
+}
+export type SessionType = {
   id: string,
   expiry: string
 }
 
+export type CreateProfileResponse = {
+  user: ProfileType,
+  session: SessionType
+}
+
 export const requestCreateProfile = async(request:CreateProfileRequest) => {
-  const data = await apiRequest<SessionResponse>("POST", "/auth", {data: request});
-  return data;
+  try {
+    const data = await apiRequest<CreateProfileResponse>("POST", "/auth2", {data: request});
+    return data;
+  } catch (err) {
+    return err;
+  }
+  
 }

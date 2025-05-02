@@ -19,7 +19,7 @@ type CreateProfileType = {
 
 export const LoginPage:FC = () => {
 
-  const [creatingModal, setCreatingModal] = useState<boolean>(true);
+  const [creatingModal, setCreatingModal] = useState<boolean>(false);
   const [tmpProfileRequest, setTmpProfileRequest] = useState<CreateProfileType | null>(null);
   const [tmpFormData, setTmpFormData] = useState<ParentFormValues | null>(null);
 
@@ -51,6 +51,7 @@ export const LoginPage:FC = () => {
   };
 
   const handleCreateProfile = async(formValues:ParentFormValues) => {
+    setCreatingModal(true);
     if(!formValues.students.length) {
       openNotification("error", "Thiếu học sinh", "Hãy khai báo ít nhất 1 học sinh!")
     } else if(tmpProfileRequest) {
@@ -75,8 +76,9 @@ export const LoginPage:FC = () => {
         studentList: studentRequest
       }
       const createProfileRequest = await requestCreateProfile(createRequest);
+      console.log(createProfileRequest)
       if(createProfileRequest) {
-        console.log(createProfileRequest)
+        
       }
     }
   }

@@ -24,22 +24,43 @@ export function setBearerToken(token: string | null) {
   }
 }
 
+export class ApiError extends Error {
+  public status?: number;
+  public data?: any;
+  constructor(message: string, status?: number, data?: any) {
+    super(message);
+    this.name = 'ApiError';
+    this.status = status;
+    this.data = data;
+  }
+}
+
 export async function apiRequest<T = any>(
   method: Method,
   url: string,
   opts: RequestOptions = {}
 ): Promise<T> {
   const { data, params, config } = opts;
-
-  const response = await axiosInstance.request<T>({
-    method,
-    url,
-    data,
-    params,
-    ...config,
-  });
-
-  return response.data;
+  try {
+    const response = await axiosInstance.request<T>({
+      method,
+      url,
+      data,
+      params,
+      ...config,
+    });
+    return response.data;
+  } catch (err: any) {
+    // AxiosError guard
+    if (axios.isAxiosError(err)) {
+      const status = err.response?.status;
+      const payload = err.response?.data;
+      // you can log here if you like
+      throw new ApiError(err.message, status, payload);
+    }
+    // non-Axios / unexpected
+    throw new ApiError(err.message || 'Unknown error');
+  }
 }
 
 export default axiosInstance;

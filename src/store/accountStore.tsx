@@ -1,10 +1,5 @@
 import {create} from "zustand";
-
-export type ProfileType = {
-  name: string,
-  gender: string,
-  avatar: string
-}
+import { ProfileType } from "../api/auth";
 
 type AccountStore = {
   profile: ProfileType | null;
