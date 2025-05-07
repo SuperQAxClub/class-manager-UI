@@ -1,4 +1,4 @@
-import { ApiError, apiRequest } from "./axios";
+import { ApiError, apiRequest, FetchResult } from "./axios";
 
 export type CreateProfileStudentRequest = {
   name: string,
@@ -37,12 +37,47 @@ export type CreateProfileResponse = {
   session: SessionType
 }
 
-export const requestCreateProfile = async(request:CreateProfileRequest) => {
+export type LoginResponse = {
+  status: string,
+  user: ProfileType,
+  session: SessionType | null
+}
+
+export const requestCreateProfile = async<T = any>(request:CreateProfileRequest):Promise<FetchResult<T>> => {
   try {
-    const data = await apiRequest<CreateProfileResponse>("POST", "/auth2", {data: request});
-    return data;
-  } catch (err) {
-    return err;
+    const items = await apiRequest<T>("POST", "/auth", {data: request});
+    return { items, error: null };
+  } catch (err: unknown) {
+    let message = 'An unexpected error occurred';
+    if (err instanceof ApiError) {
+      message = `Server returned ${err.status}: ${JSON.stringify(err.data)}`;
+    }
+    return { items: null, error: message };
   }
-  
+}
+
+export const requestLogin = async<T = any>(google_id:string):Promise<FetchResult<T>> => {
+  try {
+    const items = await apiRequest<T>("POST", "/auth/login", {data: {google_id: google_id}});
+    return { items, error: null };
+  } catch (err: unknown) {
+    let message = 'An unexpected error occurred';
+    if (err instanceof ApiError) {
+      message = `Server returned ${err.status}: ${JSON.stringify(err.data)}`;
+    }
+    return { items: null, error: message };
+  }
+}
+
+export const requestProfile = async<T = any>(sessionId:string):Promise<FetchResult<T>> => {
+  try {
+    const items = await apiRequest<T>("GET", "/auth/profile", {params: {sessionId}});
+    return { items, error: null };
+  } catch (err: unknown) {
+    let message = 'An unexpected error occurred';
+    if (err instanceof ApiError) {
+      message = `Server returned ${err.status}: ${JSON.stringify(err.data)}`;
+    }
+    return { items: null, error: message };
+  }
 }

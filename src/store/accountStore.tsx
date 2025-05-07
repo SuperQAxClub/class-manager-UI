@@ -6,7 +6,7 @@ type AccountStore = {
   setProfile: (value: ProfileType | null) => void;
 };
 
-const useGroupBookingStore = create<AccountStore>((set) => ({
+export const useAccountStore = create<AccountStore>((set) => ({
   profile: null,
   setProfile: (value: ProfileType | null) =>
     set(() => {
@@ -15,5 +15,3 @@ const useGroupBookingStore = create<AccountStore>((set) => ({
       };
     }),
 }));
-
-export default useGroupBookingStore;

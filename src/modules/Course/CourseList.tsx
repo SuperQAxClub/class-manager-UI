@@ -1,14 +1,89 @@
 import { Col, Collapse, CollapseProps, Modal, Row } from "antd";
-import { FC, useState } from "react";
+import { FC, Fragment, useEffect, useState } from "react";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import "./course.sass"
 import { faCircleCheck, faCircleXmark } from "@fortawesome/free-solid-svg-icons";
+import { CourseResponse, requestCourseList } from "../../api/school";
+import { convertDate, convertTime, formatPrice, getDay } from "../../utils/utils";
+
+type CourseItem = {
+  course: CourseResponse
+}
+
+const CourseItemDetails:FC<CourseItem> = ({course}) => {
+  return (
+    <>
+      <div className="item-header">
+        <div className="header-left">
+          <div className="item-content">
+            <div className="item-title">
+              {course.name}
+            </div>
+            <div className="item-tag">
+              {course.advanced_class && (
+                <div className="title-tag red">Chuyên</div>
+              )}
+              <div className="title-tag">{formatPrice(course.fee)} đ{course.advanced_class && "/tháng"}</div>
+              {course.has_started && (
+                <div className="title-tag orange">Đã bắt đầu</div>
+              )}
+              {!course.has_started && (
+                <div className="title-tag green">Sắp tới</div>
+              )}
+            </div>
+          </div>
+        </div>
+        <div className="header-right">
+          <div className="item-content">
+            <div className="item-room">
+              {course.room_name}
+            </div>
+            <div className="item-slots">
+              Còn <b>{course.slots_left}</b> chỗ
+            </div>
+          </div>
+        </div>
+      </div>
+      <div className="item-body">
+        <div className="info-content">
+          {course.description ? (
+            <>
+              <div className="content-title">Mô tả</div>
+              <div className="content-desc">{course.description}</div>
+            </>
+          ) : ""}
+          <div className="content-title">Thời gian khoá học</div>
+          <div className="content-desc">Từ <b>{convertDate(course.start_date)}</b> {course.end_date && (
+            <Fragment>đến <b>{convertDate(course.end_date)}</b></Fragment>
+          )}</div>
+          <div className="content-title">Thời gian học</div>
+          <div className="content-desc">
+            <b>{getDay(course.day)}</b>: từ <b>{convertTime(course.start_time)}</b> đến <b>{convertTime(course.end_time)}</b>
+          </div>
+        </div>
+      </div>
+    </>
+  )
+}
 
 const CourseItems:FC = () => {
-  const test = [1,1,1,1,1,1];
   const [registerModal, setRegisterModal] = useState<boolean>(false);
+  const [courseList, setCourseList] = useState<CourseResponse[]>([]);
+  const [selectedCourse, setSelectedCourse] = useState<CourseResponse | null>(null);
 
-  const openRegisterModal = () => {
+  useEffect(() => {
+    getCourseList();
+  }, [])
+  const getCourseList = async() => {
+    const course = await requestCourseList();
+    console.log(course.items)
+    if(course.items) {
+      setCourseList(course.items)
+    }
+  }
+
+  const openRegisterModal = (course:CourseResponse) => {
+    setSelectedCourse(course);
     setRegisterModal(true);
   }
   const closeRegisterModal = () => {
@@ -18,47 +93,11 @@ const CourseItems:FC = () => {
   return (
     <>
       <Row gutter={[16, 16]}>
-        {test.map(item => {
+        {courseList.map(course => {
           return (
-            <Col xs={24} sm={12} xl={8}>
-              <div className="course-item" onClick={() => {openRegisterModal()}}>
-                <div className="item-header">
-                  <div className="header-left">
-                    <div className="item-content">
-                      <div className="item-title">
-                        Lớp 9A
-                      </div>
-                      <div className="item-tag">
-                        <div className="title-tag red">Chuyên</div>
-                        <div className="title-tag">2.500.000đ</div>
-                        <div className="title-tag green">Sắp tới</div>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="header-right">
-                    <div className="item-content">
-                      <div className="item-room">
-                        Phòng <b>202</b>
-                      </div>
-                      <div className="item-slots">
-                        Còn <b>999</b> chỗ
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                <div className="item-body">
-                  <div className="info-content">
-                    <div className="content-title">Mô tả</div>
-                    <div className="content-desc limit-desc">Đây là khoá học khoa học tự nhiên siêu cấp VIP Pro có thể cân mọi kỳ thi đạt điểm cao. Lorem ipsum dolor sit amet consectetur adipisicing elit. Vel delectus dignissimos doloremque autem rerum cupiditate quam ex sequi praesentium. Esse quisquam alias accusantium magnam, perspiciatis ipsam repudiandae doloribus distinctio cum.</div>
-                    <div className="content-title">Thời gian khoá học</div>
-                    <div className="content-desc">Từ <b>01/08/2025</b> đến <b>01/10/2025</b></div>
-                    <div className="content-title">Thời gian học</div>
-                    <div className="content-desc">
-                      Thứ 2: từ <b>18:00</b> đến <b>20:00</b>
-                      <br />Thứ 4: từ <b>16:00</b> đến <b>18:00</b>
-                    </div>
-                  </div>
-                </div>
+            <Col xs={24} sm={12} xl={8} key={course.id}>
+              <div className="course-item" onClick={() => {openRegisterModal(course)}}>
+                <CourseItemDetails course={course} />
               </div>
             </Col>
           )
@@ -76,44 +115,10 @@ const CourseItems:FC = () => {
       >
         <div className="modal-scroll-container">
           <div className="modal-scroll-container">
-            <div className="course-modal" onClick={() => {openRegisterModal()}}>
-              <div className="item-header">
-                <div className="header-left">
-                  <div className="item-content">
-                    <div className="item-title">
-                      Lớp 9A
-                    </div>
-                    <div className="item-tag">
-                      <div className="title-tag red">Chuyên</div>
-                      <div className="title-tag">2.500.000đ</div>
-                      <div className="title-tag green">Sắp tới</div>
-                    </div>
-                  </div>
-                </div>
-                <div className="header-right">
-                  <div className="item-content">
-                    <div className="item-room">
-                      Phòng <b>202</b>
-                    </div>
-                    <div className="item-slots">
-                      Còn <b>999</b> chỗ
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div className="item-body">
-                <div className="info-content">
-                  <div className="content-title">Mô tả</div>
-                  <div className="content-desc">Đây là khoá học khoa học tự nhiên siêu cấp VIP Pro có thể cân mọi kỳ thi đạt điểm cao. Lorem ipsum dolor sit amet consectetur adipisicing elit. Vel delectus dignissimos doloremque autem rerum cupiditate quam ex sequi praesentium. Esse quisquam alias accusantium magnam, perspiciatis ipsam repudiandae doloribus distinctio cum.</div>
-                  <div className="content-title">Thời gian khoá học</div>
-                  <div className="content-desc">Từ <b>01/08/2025</b> đến <b>01/10/2025</b></div>
-                  <div className="content-title">Thời gian học</div>
-                  <div className="content-desc">
-                    Thứ 2: từ <b>18:00</b> đến <b>20:00</b>
-                    <br />Thứ 4: từ <b>16:00</b> đến <b>18:00</b>
-                  </div>
-                </div>
-              </div>
+            <div className="course-modal">
+              {selectedCourse ? (
+                <CourseItemDetails course={selectedCourse} />
+              ) : ""}
             </div>
             <div className="student-selector">
               <div className="selector-title">
@@ -182,11 +187,6 @@ export const CourseListComponent:FC = () => {
       label: 'Khoa học tự nhiên',
       children: <CourseItems />,
     },
-    {
-      key: '2',
-      label: 'Toán',
-      children: <CourseItems />,
-    }
   ];
   return (
     <Collapse items={subjectList} defaultActiveKey={['1']}  />

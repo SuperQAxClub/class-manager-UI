@@ -1,12 +1,15 @@
 import axios, { AxiosInstance, AxiosRequestConfig, Method } from 'axios';
+import { getSession } from '../utils/utils';
 
 interface RequestOptions {
   data?: unknown;
   params?: Record<string, any>;
   config?: AxiosRequestConfig;
 }
-
-// base URL for all requests (set via your .env)
+export interface FetchResult<T> {
+  items: T | null;
+  error: string | null;
+}
 
 const axiosInstance: AxiosInstance = axios.create({
   baseURL: import.meta.env.VITE_API,
@@ -34,6 +37,14 @@ export class ApiError extends Error {
     this.data = data;
   }
 }
+
+axiosInstance.interceptors.request.use(config => {
+  const session = getSession();
+  if (session) {
+    config.headers.Authorization = `Bearer ${session.id}`;
+  }
+  return config;
+}, error => Promise.reject(error));
 
 export async function apiRequest<T = any>(
   method: Method,

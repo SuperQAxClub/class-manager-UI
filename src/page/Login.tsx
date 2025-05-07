@@ -1,11 +1,11 @@
 import { CredentialResponse, GoogleLogin } from "@react-oauth/google";
-import { FC, useState } from "react";
-import { verifyGoogleIdToken } from "../utils/utils";
-import { Modal, notification, Spin } from "antd";
+import { FC, useEffect, useState } from "react";
+import { saveSession, verifyGoogleIdToken } from "../utils/utils";
+import { Modal, notification } from "antd";
 import { ParentFormValues, UserFormComponent } from "../modules/Profile/UserForm";
-import { CreateProfileRequest, CreateProfileStudentRequest, requestCreateProfile } from "../api/auth";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faCircleNotch } from "@fortawesome/free-solid-svg-icons";
+import { CreateProfileRequest, CreateProfileResponse, CreateProfileStudentRequest, LoginResponse, requestCreateProfile, requestLogin } from "../api/auth";
+import { useAccountStore } from "../store/accountStore";
+import { useLocation } from "wouter";
 
 type CreateProfileType = { 
   name:string,
@@ -18,10 +18,18 @@ type CreateProfileType = {
 }
 
 export const LoginPage:FC = () => {
+  const {profile, setProfile} = useAccountStore();
+  const [, navigate] = useLocation();
 
   const [creatingModal, setCreatingModal] = useState<boolean>(false);
   const [tmpProfileRequest, setTmpProfileRequest] = useState<CreateProfileType | null>(null);
   const [tmpFormData, setTmpFormData] = useState<ParentFormValues | null>(null);
+
+  useEffect(() => {
+    if(profile) {
+      navigate("/course");
+    }
+  }, [profile])
 
   const openNotification = (type:string, title:string, message:string) => {
     switch (type) {
@@ -75,12 +83,18 @@ export const LoginPage:FC = () => {
         google_id: tmpProfileRequest.google_id,
         studentList: studentRequest
       }
-      const createProfileRequest = await requestCreateProfile(createRequest);
+      const createProfileRequest = await requestCreateProfile<CreateProfileResponse>(createRequest);
       console.log(createProfileRequest)
-      if(createProfileRequest) {
-        
+      if(createProfileRequest.error) {
+        openNotification("error", "Lỗi", "Đã xảy ra lỗi khi tạo tài khoản")
+      } else if(createProfileRequest.items) {
+        setProfile(createProfileRequest.items.user);
+        saveSession(createProfileRequest.items.session);
+        openNotification("success", "Thành công", "Tài khoản đã được tạo và đã đăng nhập.");
+        navigate("/course");
       }
     }
+    setCreatingModal(false);
   }
 
   const handleGoogleLogin = async(res:CredentialResponse) => {
@@ -89,21 +103,42 @@ export const LoginPage:FC = () => {
     } else {
       try {
         const payload = await verifyGoogleIdToken(res.credential);
-        setTmpProfileRequest({
-          name: "",
-          gender: "",
-          mobile: "",
-          avatar_url: payload.picture,
-          email: payload.email,
-          google_id: payload.sub,
-          studentList: []
-        });
-        setTmpFormData({
-          name: `${payload.family_name} ${payload.given_name}`,
-          phone: "",
-          gender: "",
-          students: []
-        })
+        const checkLogin = await requestLogin<LoginResponse>(payload.sub);
+        if(checkLogin.error) {
+          openNotification("error", "Lỗi đăng nhập", "Đăng nhập bằng Google thất bại, hãy thử lại sau!")
+        } else if (checkLogin.items) {
+          const loginStatus = checkLogin.items.status;
+          switch (loginStatus) {
+            case "sign-up":
+              setTmpProfileRequest({
+                name: "",
+                gender: "",
+                mobile: "",
+                avatar_url: payload.picture,
+                email: payload.email,
+                google_id: payload.sub,
+                studentList: []
+              });
+              setTmpFormData({
+                name: `${payload.family_name} ${payload.given_name}`,
+                phone: "",
+                gender: "",
+                students: []
+              })
+              break;
+            case "success":
+              if(checkLogin.items.user && checkLogin.items.session) {
+                setProfile(checkLogin.items.user);
+                saveSession(checkLogin.items.session);
+                openNotification("success", "Thành công", "Đăng nhập thành công");
+                navigate("/course");
+              }
+              break;
+            default:
+              break;
+          }
+          
+        }
       } catch (err) {
         openNotification("error", "Lỗi đăng nhập", "Đăng nhập bằng Google thất bại, hãy thử lại sau!")
       }
