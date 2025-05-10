@@ -1,10 +1,11 @@
-import { Col, Collapse, CollapseProps, Modal, Row } from "antd";
+import { Button, Col, Collapse, CollapseProps, Modal, Row } from "antd";
 import { FC, Fragment, useEffect, useState } from "react";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import "./course.sass"
 import { faCircleCheck, faCircleXmark } from "@fortawesome/free-solid-svg-icons";
-import { CourseResponse, requestCourseList } from "../../api/school";
-import { convertDate, convertTime, formatPrice, getDay } from "../../utils/utils";
+import { CheckStudentResponse, CourseResponse, requestCheckStudent, requestCourseList, requestRegisterCourse } from "../../api/school";
+import { convertDate, convertTime, getDay } from "../../utils/utils";
+import { useAccountStore } from "../../store/accountStore";
 
 type CourseItem = {
   course: CourseResponse
@@ -23,7 +24,6 @@ const CourseItemDetails:FC<CourseItem> = ({course}) => {
               {course.advanced_class && (
                 <div className="title-tag red">Chuyên</div>
               )}
-              <div className="title-tag">{formatPrice(course.fee)} đ{course.advanced_class && "/tháng"}</div>
               {course.has_started && (
                 <div className="title-tag orange">Đã bắt đầu</div>
               )}
@@ -66,28 +66,86 @@ const CourseItemDetails:FC<CourseItem> = ({course}) => {
   )
 }
 
+type StudentSelector = CheckStudentResponse & {
+  selected: boolean
+}
 const CourseItems:FC = () => {
+  const {profile} = useAccountStore();
   const [registerModal, setRegisterModal] = useState<boolean>(false);
+  const [loadingModal, setLoadingModal] = useState<boolean>(false);
+  const [loadingMessage, setLoadingMessage] = useState<string>("");
+  const [selectedAtLeastOneStudent, setSelectedAtLeastOneStudent] = useState<boolean>(false);
   const [courseList, setCourseList] = useState<CourseResponse[]>([]);
   const [selectedCourse, setSelectedCourse] = useState<CourseResponse | null>(null);
+  const [studentSelector, setStudentSelector] = useState<StudentSelector[]>([]);
 
   useEffect(() => {
     getCourseList();
   }, [])
   const getCourseList = async() => {
     const course = await requestCourseList();
-    console.log(course.items)
     if(course.items) {
       setCourseList(course.items)
     }
   }
 
-  const openRegisterModal = (course:CourseResponse) => {
-    setSelectedCourse(course);
-    setRegisterModal(true);
+  const openRegisterModal = async(course:CourseResponse) => {
+    if(course && profile) {
+      setSelectedCourse(course);
+      setRegisterModal(true);
+      setSelectedAtLeastOneStudent(false);
+      const checkStudent = await requestCheckStudent<CheckStudentResponse[]>(course.id, profile.id);
+      if(checkStudent.items) {
+        let tmpStudentSelector:StudentSelector[] = [];
+        checkStudent.items.forEach(student => {
+          tmpStudentSelector.push({
+            ...student,
+            selected: false
+          })
+        })
+        setStudentSelector(tmpStudentSelector);
+      }
+    }
   }
   const closeRegisterModal = () => {
     setRegisterModal(false);
+    setStudentSelector([]);
+  }
+
+  const selectStudent = (student:StudentSelector) => {
+    if(student.eligible === "yes") {
+      setStudentSelector(prev =>
+        prev.map(item =>
+          item.student_id === student.student_id
+            ? { ...item, selected: !item.selected }
+            : item
+        )
+      )
+    }
+  }
+  useEffect(() => {
+    const findSelectedStudent = studentSelector.find(student => student.selected);
+    if(findSelectedStudent) {
+      setSelectedAtLeastOneStudent(true);
+    } else {
+      setSelectedAtLeastOneStudent(false);
+    }
+  }, [studentSelector])
+
+  const handleRegister = async() => {
+    if(studentSelector.length && selectedAtLeastOneStudent && selectedCourse && profile) {
+      setLoadingMessage("Đang đăng ký");
+      setRegisterModal(false);
+      setLoadingModal(true);
+      let studentList:string[] = [];
+      studentSelector.forEach(student => {
+        if(student.selected && student.eligible === "yes") {
+          studentList.push(student.student_id);
+        }
+      })
+      await requestRegisterCourse(selectedCourse.id, studentList, profile.id);
+      setLoadingModal(false);
+    }
   }
 
   return (
@@ -106,10 +164,15 @@ const CourseItems:FC = () => {
       <Modal
         title="Đăng ký khoá học"
         open={registerModal}
-        onOk={() => closeRegisterModal()}
-        onCancel={() => closeRegisterModal()}
-        okText="Đăng ký"
-        cancelText="Huỷ"
+        footer={[
+          <Button key="back" onClick={closeRegisterModal}>
+            Huỷ
+          </Button>,
+          <Button key="submit" type="primary" disabled={!selectedAtLeastOneStudent} onClick={() => handleRegister()}>
+            Đăng ký
+          </Button>,
+        ]}
+        onCancel={closeRegisterModal}
         width={800}
         centered
       >
@@ -124,55 +187,66 @@ const CourseItems:FC = () => {
               <div className="selector-title">
                 Chọn học sinh tham gia khoá học
               </div>
-              <div className="selector-list">
-                <Row gutter={[16,16]}>
-                  <Col xs={24} sm={12}>
-                    <div className="list-item">
-                      <div className="list-info">
-                        <div className="info-name">Nguyễn Văn A</div>
-                        <div className="info-desc">Khối 9</div>
-                      </div>
-                      <div className="list-icon">
-                        <FontAwesomeIcon icon={faCircleCheck} />
-                      </div>
-                    </div>
-                  </Col>
-                  <Col xs={24} sm={12}>
-                    <div className="list-item selected">
-                      <div className="list-info">
-                        <div className="info-name">Nguyễn Văn A1</div>
-                        <div className="info-desc">Khối 9</div>
-                      </div>
-                      <div className="list-icon">
-                        <FontAwesomeIcon icon={faCircleCheck} />
-                      </div>
-                    </div>
-                  </Col>
-                  <Col xs={24} sm={12}>
-                    <div className="list-item disabled">
-                      <div className="list-info">
-                        <div className="info-name">Nguyễn Văn B</div>
-                        <div className="info-desc">Khối 9</div>
-                        <div className="info-error">&nbsp;- Đã đăng ký</div>
-                      </div>
-                      <div className="list-icon"></div>
-                    </div>
-                  </Col>
-                  <Col xs={24} sm={12}>
-                    <div className="list-item invalid">
-                      <div className="list-info">
-                        <div className="info-name">Nguyễn Văn C</div>
-                        <div className="info-desc">Khối 6</div>
-                        <div className="info-error">&nbsp;- Khối không phù hợp</div>
-                      </div>
-                      <div className="list-icon">
-                        <FontAwesomeIcon icon={faCircleXmark} />
-                      </div>
-                    </div>
-                  </Col>
-                </Row>
-              </div>
+              {studentSelector.length ? (
+                <div className="selector-list">
+                  <Row gutter={[16,16]}>
+                    {studentSelector.map(student => {
+                      let getSelectorClass = "";
+                      let errorDesc = "";
+                      switch (student.eligible) {
+                        case "no":
+                          getSelectorClass = "invalid";
+                          errorDesc = "Khối không phù hợp"
+                          break;
+                        case "registered":
+                          getSelectorClass = "disabled";
+                          errorDesc = "Đã đăng ký"
+                          break;
+                      
+                        default:
+                          break;
+                      }
+                      return (
+                        <Col xs={24} sm={12}>
+                          <div className={`list-item ${getSelectorClass} ${student.selected ? "selected" : ""}`} onClick={() => selectStudent(student)}>
+                            <div className="list-info">
+                              <div className="info-name">{student.student_name}</div>
+                              <div className="info-desc">Khối {student.grade_name}</div>
+                              {errorDesc && <div className="info-error">&nbsp;- {errorDesc}</div>}
+                            </div>
+                            <div className="list-icon">
+                              {student.selected && <FontAwesomeIcon icon={faCircleCheck} />}
+                              {student.eligible === "no" && <FontAwesomeIcon icon={faCircleXmark} />}
+                            </div>
+                          </div>
+                        </Col>
+                      )
+                    })}
+                  </Row>
+                </div>
+              ) : (
+                <div className="modal-loading">
+                  <div className="loading-icon"></div>
+                  <div className="loading-text">
+                    Đang kiểm tra học sinh
+                  </div>
+                </div>
+              )}
             </div>
+          </div>
+        </div>
+      </Modal>
+      <Modal
+        open={loadingModal}
+        width={500}
+        closable={false}
+        footer={null}
+        centered
+      >
+        <div className="modal-loading">
+          <div className="loading-icon"></div>
+          <div className="loading-text">
+            {loadingMessage}
           </div>
         </div>
       </Modal>
