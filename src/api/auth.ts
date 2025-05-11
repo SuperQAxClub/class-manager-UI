@@ -74,6 +74,12 @@ export type StudentResponse = {
 export type StatusResponse = {
   status: string
 }
+export type RegisterResponse = StatusResponse & {
+  transaction?: {
+    fee: number,
+    id: string
+  }
+}
 
 export const requestCreateProfile = async<T = any>(request:CreateProfileRequest):Promise<FetchResult<T>> => {
   try {

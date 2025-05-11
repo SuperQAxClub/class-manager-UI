@@ -1,4 +1,4 @@
-import { Button, Dropdown, MenuProps, Space } from "antd";
+import { Button, Dropdown, MenuProps } from "antd";
 import "./menu.sass"
 import { FC } from "react";
 import { Link, useLocation } from "wouter";
@@ -21,10 +21,18 @@ export const MenuBar:FC = () => {
     {
       label: (
         <Link to="profile">
-          Quản lý
+          Quản lý thông tin
         </Link>
       ),
       key: '0',
+    },
+    {
+      label: (
+        <Link to="my-course">
+          Khoá học đã đăng ký
+        </Link>
+      ),
+      key: '1',
     },
     {
       label: (
@@ -32,7 +40,7 @@ export const MenuBar:FC = () => {
           Đăng xuất
         </a>
       ),
-      key: '1',
+      key: '2',
     }
   ];
 
@@ -51,9 +59,6 @@ export const MenuBar:FC = () => {
                 Đăng ký khoá học
               </Button>
             </Link>
-            <Button color="primary" variant="text">
-              Liên hệ
-            </Button>
             {profile ? (
               <Dropdown menu={{ items }} trigger={['click']}>
                 <Button color="primary" variant="text" iconPosition="end" icon={<FontAwesomeIcon icon={faChevronDown} />}>

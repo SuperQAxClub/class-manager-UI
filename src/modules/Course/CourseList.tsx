@@ -4,32 +4,52 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import "./course.sass"
 import { faCircleCheck, faCircleXmark } from "@fortawesome/free-solid-svg-icons";
 import { CheckStudentResponse, CourseResponse, requestCheckStudent, requestCourseList, requestRegisterCourse } from "../../api/school";
-import { convertDate, convertTime, getDay } from "../../utils/utils";
+import { convertDate, convertTime, formatPrice, getDay } from "../../utils/utils";
 import { useAccountStore } from "../../store/accountStore";
+import { RegisterResponse } from "../../api/auth";
 
 type CourseItem = {
-  course: CourseResponse
+  course: CourseResponse,
+  status?: string
 }
 
-const CourseItemDetails:FC<CourseItem> = ({course}) => {
+export const CourseItemDetails:FC<CourseItem> = ({course, status}) => {
   return (
     <>
       <div className="item-header">
         <div className="header-left">
           <div className="item-content">
-            <div className="item-title">
-              {course.name}
+            <div className="item-title-container">
+              <div className="item-title">
+                <div className="title-text">{course.name}</div>
+                {status ? (
+                  <div className="item-tag">
+                    {status === "confirmed" ? (
+                      <div className="title-tag green">Đã xác minh</div>
+                    ) : ""}
+                    {status === "pending" ? (
+                      <div className="title-tag orange">Đang xác minh</div>
+                    ) : ""}
+                    {status === "admin-pending" ? (
+                      <div className="title-tag orange">Cần xác minh</div>
+                    ) : ""}
+                  </div>
+                ) : ""}
+              </div>
             </div>
             <div className="item-tag">
-              {course.advanced_class && (
+              {course.advanced_class ? (
                 <div className="title-tag red">Chuyên</div>
-              )}
-              {course.has_started && (
+              ) : ""}
+              {course.has_started && !course.is_over ? (
                 <div className="title-tag orange">Đã bắt đầu</div>
-              )}
-              {!course.has_started && (
+              ) : ""}
+              {!course.has_started && !course.is_over ? (
                 <div className="title-tag green">Sắp tới</div>
-              )}
+              ) : ""}
+              {course.is_over ? (
+                <div className="title-tag red">Đã kết thúc</div>
+              ) : ""}
             </div>
           </div>
         </div>
@@ -38,9 +58,11 @@ const CourseItemDetails:FC<CourseItem> = ({course}) => {
             <div className="item-room">
               {course.room_name}
             </div>
-            <div className="item-slots">
-              Còn <b>{course.slots_left}</b> chỗ
-            </div>
+            {course.slots_left ? (
+              <div className="item-slots">
+                Còn <b>{course.slots_left}</b> chỗ
+              </div>
+            ) : ""}
           </div>
         </div>
       </div>
@@ -73,6 +95,8 @@ const CourseItems:FC = () => {
   const {profile} = useAccountStore();
   const [registerModal, setRegisterModal] = useState<boolean>(false);
   const [loadingModal, setLoadingModal] = useState<boolean>(false);
+  const [transactionModal, setTransactionModal] = useState<boolean>(false);
+  const [transactionInfo, setTransactionInfo] = useState<RegisterResponse | null>(null);
   const [loadingMessage, setLoadingMessage] = useState<string>("");
   const [selectedAtLeastOneStudent, setSelectedAtLeastOneStudent] = useState<boolean>(false);
   const [courseList, setCourseList] = useState<CourseResponse[]>([]);
@@ -109,7 +133,6 @@ const CourseItems:FC = () => {
   }
   const closeRegisterModal = () => {
     setRegisterModal(false);
-    setStudentSelector([]);
   }
 
   const selectStudent = (student:StudentSelector) => {
@@ -143,8 +166,14 @@ const CourseItems:FC = () => {
           studentList.push(student.student_id);
         }
       })
-      await requestRegisterCourse(selectedCourse.id, studentList, profile.id);
+      const registerRes = await requestRegisterCourse<RegisterResponse>(selectedCourse.id, studentList, profile.id);
       setLoadingModal(false);
+      if(registerRes.items && registerRes.items.transaction) {
+        setTransactionInfo(registerRes.items);
+        setTransactionModal(true);
+      } else if (registerRes.error) {
+        console.log(registerRes.error)
+      }
     }
   }
 
@@ -177,62 +206,64 @@ const CourseItems:FC = () => {
         centered
       >
         <div className="modal-scroll-container">
-          <div className="modal-scroll-container">
-            <div className="course-modal">
-              {selectedCourse ? (
-                <CourseItemDetails course={selectedCourse} />
-              ) : ""}
+          <div className="course-modal">
+            {selectedCourse ? (
+              <CourseItemDetails course={selectedCourse} />
+            ) : ""}
+          </div>
+          <div className="student-selector">
+            <div className="selector-title">
+              Chọn học sinh tham gia khoá học
             </div>
-            <div className="student-selector">
-              <div className="selector-title">
-                Chọn học sinh tham gia khoá học
-              </div>
-              {studentSelector.length ? (
-                <div className="selector-list">
-                  <Row gutter={[16,16]}>
-                    {studentSelector.map(student => {
-                      let getSelectorClass = "";
-                      let errorDesc = "";
-                      switch (student.eligible) {
-                        case "no":
-                          getSelectorClass = "invalid";
-                          errorDesc = "Khối không phù hợp"
-                          break;
-                        case "registered":
-                          getSelectorClass = "disabled";
-                          errorDesc = "Đã đăng ký"
-                          break;
-                      
-                        default:
-                          break;
-                      }
-                      return (
-                        <Col xs={24} sm={12}>
-                          <div className={`list-item ${getSelectorClass} ${student.selected ? "selected" : ""}`} onClick={() => selectStudent(student)}>
-                            <div className="list-info">
-                              <div className="info-name">{student.student_name}</div>
-                              <div className="info-desc">Khối {student.grade_name}</div>
-                              {errorDesc && <div className="info-error">&nbsp;- {errorDesc}</div>}
-                            </div>
-                            <div className="list-icon">
-                              {student.selected && <FontAwesomeIcon icon={faCircleCheck} />}
-                              {student.eligible === "no" && <FontAwesomeIcon icon={faCircleXmark} />}
-                            </div>
+            {studentSelector.length ? (
+              <div className="selector-list">
+                <Row gutter={[16,16]}>
+                  {studentSelector.map(student => {
+                    let getSelectorClass = "";
+                    let errorDesc = "";
+                    switch (student.eligible) {
+                      case "no":
+                        getSelectorClass = "invalid";
+                        errorDesc = "Khối không phù hợp"
+                        break;
+                      case "registered":
+                        getSelectorClass = "disabled";
+                        errorDesc = "Đã đăng ký"
+                        break;
+                      case "registered-other-course":
+                        getSelectorClass = "invalid";
+                        errorDesc = "Đã đăng ký khoá học khác"
+                        break;
+                    
+                      default:
+                        break;
+                    }
+                    return (
+                      <Col xs={24} sm={12} key={student.student_id}>
+                        <div className={`list-item ${getSelectorClass} ${student.selected ? "selected" : ""}`} onClick={() => selectStudent(student)}>
+                          <div className="list-info">
+                            <div className="info-name">{student.student_name}</div>
+                            <div className="info-desc">Khối {student.grade_name}</div>
+                            {errorDesc && <div className="info-error">&nbsp;- {errorDesc}</div>}
                           </div>
-                        </Col>
-                      )
-                    })}
-                  </Row>
+                          <div className="list-icon">
+                            {student.selected && <FontAwesomeIcon icon={faCircleCheck} />}
+                            {errorDesc && <FontAwesomeIcon icon={faCircleXmark} />}
+                          </div>
+                        </div>
+                      </Col>
+                    )
+                  })}
+                </Row>
+              </div>
+            ) : (
+              <div className="modal-loading">
+                <div className="loading-icon"></div>
+                <div className="loading-text">
+                  Đang kiểm tra học sinh
                 </div>
-              ) : (
-                <div className="modal-loading">
-                  <div className="loading-icon"></div>
-                  <div className="loading-text">
-                    Đang kiểm tra học sinh
-                  </div>
-                </div>
-              )}
-            </div>
+              </div>
+            )}
           </div>
         </div>
       </Modal>
@@ -249,6 +280,89 @@ const CourseItems:FC = () => {
             {loadingMessage}
           </div>
         </div>
+      </Modal>
+      <Modal
+        open={transactionModal}
+        footer={[
+          <Button key="back" type="primary" onClick={() => setTransactionModal(false)}>
+            Đóng
+          </Button>,
+        ]}
+        onCancel={() => setTransactionModal(false)}
+        width={800}
+        centered
+      >
+        {transactionInfo && transactionInfo.transaction ? (
+          <div className="modal-scroll-container">
+            <div className="modal-center-title">Đăng ký thành công</div>
+            {selectedCourse ? (
+              <div className="modal-list">
+                <div className="list-item">
+                  <b>Lớp đăng ký:</b> {selectedCourse.name}
+                </div>
+                <div className="list-item">
+                  <b>Thời gian khoá học:</b> Từ {convertDate(selectedCourse.start_date)} {selectedCourse.end_date && (<Fragment>đến {convertDate(selectedCourse.end_date)}</Fragment>)}
+                </div>
+                <div className="list-item">
+                  <b>Học sinh:</b>&nbsp;
+                  <span className="item-student">
+                    {studentSelector.map((student, index) => {
+                      if(student.selected) {
+                        return (
+                          <span key={index}>{student.student_name}</span>
+                        )
+                      }
+                    })}
+                  </span>
+                </div>
+              </div>
+            ) : ""}
+            <div className="modal-center-title">Học phí cần thanh toán</div>
+            <div className="modal-center-desc-price">{formatPrice(transactionInfo.transaction.fee)}đ</div>
+            <div className="modal-center-title">Thông tin chuyển khoản</div>
+            <div className="modal-center-desc">Trong vòng 48 giờ sau khi đăng kí, quý phụ huynh chuyển khoản vào một trong hai số tài khoản dưới. Nội dung chuyển khoản ghi rõ: <b>HỌ TÊN HỌC SINH - LỚP ĐANG HỌC - LỚP ĐĂNG KÍ (Ví dụ: NGUYỄN VĂN AN - 9A2 - 9B)</b>. Sau khi chuyển khoản thành công, quý phụ huynh hãy chụp ảnh màn hình và gửi Zalo cho một trong hai thầy để xác nhận. <b>Hệ thống sẽ tự động hủy đăng kí sau 48 giờ nếu không được xác nhận.</b></div>
+            <Row gutter={[16, 16]} style={{marginTop: "10px"}}>
+              <Col xs={24} sm={12}>
+                <div className="modal-list">
+                  <div className="list-item">
+                    <b>Ngân hàng:</b> Techcombank
+                  </div>
+                  <div className="list-item">
+                    <b>Tên tài khoản:</b> NGUYỄN LƯƠNG TÙNG
+                  </div>
+                  <div className="list-item">
+                    <b>Số tài khoản:</b> 1903 6395 7890 10
+                  </div>
+                  <div className="list-item">
+                    <b>Mã giao dịch:</b> {transactionInfo.transaction.id}
+                  </div>
+                  <div className="list-item">
+                    <b>Số điện thoại/Zalo:</b> 0844548880
+                  </div>
+                </div>
+              </Col>
+              <Col xs={24} sm={12}>
+                <div className="modal-list">
+                  <div className="list-item">
+                    <b>Ngân hàng:</b> Argribank
+                  </div>
+                  <div className="list-item">
+                    <b>Tên tài khoản:</b> PHAN HUY BÃO
+                  </div>
+                  <div className="list-item">
+                    <b>Số tài khoản:</b> 1606 2054 1957 0
+                  </div>
+                  <div className="list-item">
+                    <b>Mã giao dịch:</b> {transactionInfo.transaction.id}
+                  </div>
+                  <div className="list-item">
+                    <b>Số điện thoại/Zalo:</b> 0909820852
+                  </div>
+                </div>
+              </Col>
+            </Row>
+          </div>
+        ) : ""}
       </Modal>
     </>
   )

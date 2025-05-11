@@ -80,3 +80,11 @@ export const convertDate = (date:string) => {
 export const convertTime = (time:string) => {
   return time.slice(0, 5)
 }
+
+export const registerError = (code:string) => {
+  switch (code) {
+    case "STUDENT_NOT_EXIST": return "Học sinh không tồn tại"
+  
+    default: return "Lỗi không xác định"
+  }
+}

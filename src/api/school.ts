@@ -20,20 +20,26 @@ export type SchoolClassResponse = {
 export type CourseResponse = {
   id: string;
   name: string;
-  grade_id: string;
   room_name: string;
   advanced_class: boolean;
   start_date: string;
   end_date: string;
-  room_id: string;
-  actual_capacity: number;
-  slots_left: number;
-  subject_id: string;
+  slots_left?: number;
   description: string | null;
   day: string;
   start_time: string;
   end_time: string;
   has_started: boolean;
+  is_over: boolean;
+  pending_confirmation?: boolean;
+}
+export type MyCourseResponse = CourseResponse & {
+  registration_id: string,
+  student_id: string,
+  student_name: string,
+  fee_amount: number,
+  transaction_id: string,
+  status: string
 }
 
 export type CheckStudentResponse = {
@@ -84,6 +90,19 @@ export const requestCheckStudent = async<T = any>(courseId:string, userId:string
 export const requestRegisterCourse = async<T = any>(courseId:string, studentList: string[], userId:string):Promise<FetchResult<T>> => {
   try {
     const items = await apiRequest<T>("POST", "/school/register-course", {data: {courseId, studentList, userId}});
+    return { items, error: null };
+  } catch (err: unknown) {
+    let message = 'An unexpected error occurred';
+    if (err instanceof ApiError) {
+      message = `Server returned ${err.status}: ${JSON.stringify(err.data)}`;
+    }
+    return { items: null, error: message };
+  }
+}
+
+export const requestMyCourse = async<T = any>(userId:string):Promise<FetchResult<T>> => {
+  try {
+    const items = await apiRequest<T>("GET", "/school/my-course", {params: {userId}});
     return { items, error: null };
   } catch (err: unknown) {
     let message = 'An unexpected error occurred';

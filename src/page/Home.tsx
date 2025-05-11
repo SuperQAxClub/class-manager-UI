@@ -6,7 +6,7 @@ export const HomePage:FC = () => {
     <>
       <MenuBar />
       <div className="main-container">
-        Lorem ipsum dolor, sit amet consectetur adipisicing elit. Numquam voluptatem, eum similique recusandae enim assumenda, quisquam sequi pariatur deserunt aut impedit molestias, accusamus repellendus commodi voluptatibus. Quod iure magni tenetur.
+        <img className="home-img" src="/btg-home.jpg"/>
       </div>
     </>
   )

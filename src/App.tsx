@@ -8,6 +8,8 @@ import { useEffect, useState } from 'react'
 import { getSession } from './utils/utils'
 import { ProfileType, requestProfile } from './api/auth'
 import { useAccountStore } from './store/accountStore'
+import { MyCoursePage } from './page/MyCourse'
+import { AdminCourseManager } from './page/AdminCourseManager'
 
 function App() {
 
@@ -46,6 +48,8 @@ function App() {
           <Route path={"/"} component={HomePage} />
           <Route path={"/course"} component={CoursePage} />
           <Route path={"/profile"} component={ProfilePage} />
+          <Route path={"/my-course"} component={MyCoursePage} />
+          <Route path={"/tung-siu-vip-pro"} component={AdminCourseManager} />
           <Route path={"/login"} component={LoginPage} />
         </Router>
       )}

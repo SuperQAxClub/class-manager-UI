@@ -19,9 +19,15 @@
   .header-left
     flex: 1
   .item-content
-    .item-title
-      font-size: 18pt
-      font-weight: 700
+    .item-title-container
+      .item-title
+        display: inline-flex
+        align-items: center
+        flex-wrap: wrap
+        gap: 10px
+        .title-text
+          font-size: 18pt
+          font-weight: 700
     .item-tag
       display: inline-flex
       align-items: center
@@ -129,3 +135,24 @@
       @media (hover: hover) and (pointer: fine)
         &:hover
           border-color: $main-color
+.modal-scroll-container
+  .modal-center-title
+    margin-top: 10px
+    font-size: 18pt
+    font-weight: 700
+    text-align: center
+  .modal-list
+    font-size: 14pt
+    .list-item
+      .item-student
+        span:not(:last-child)::after
+          content: ", "
+  .modal-center-desc-price
+    font-size: 20pt
+    font-weight: 700
+    text-align: center
+    color: $main-color
+    margin-top: -10px
+  .modal-center-desc
+    font-size: 14pt
+    text-align: center
