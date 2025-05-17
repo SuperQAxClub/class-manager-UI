@@ -4,6 +4,8 @@ import { ProfileType } from "../api/auth";
 type AccountStore = {
   profile: ProfileType | null;
   setProfile: (value: ProfileType | null) => void;
+  adminProfile: string | null;
+  setAdminProfile: (value: string | null) => void;
 };
 
 export const useAccountStore = create<AccountStore>((set) => ({
@@ -13,5 +15,14 @@ export const useAccountStore = create<AccountStore>((set) => ({
       return {
         profile: value,
       };
-    }),
+    }
+  ),
+  adminProfile: null,
+  setAdminProfile: (value: string | null) =>
+    set(() => {
+      return {
+        adminProfile: value,
+      };
+    }
+  ),
 }));

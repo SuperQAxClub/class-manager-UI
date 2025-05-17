@@ -1,28 +1,27 @@
 import { CredentialResponse, GoogleLogin } from "@react-oauth/google";
 import { FC, useEffect, useState } from "react";
-import { saveSession, verifyGoogleIdToken } from "../utils/utils";
-import { Modal, notification } from "antd";
-import { ParentFormValues, UserFormComponent } from "../modules/Profile/UserForm";
+import { getErrorText, saveSession, verifyGoogleIdToken } from "../utils/utils";
+import { Button, Form, Input, Modal, notification } from "antd";
+import { ParentFormValues, UserFormComponent, vietnamPhoneRegex } from "../modules/Profile/UserForm";
 import { CreateProfileRequest, CreateProfileResponse, CreateProfileStudentRequest, LoginResponse, requestCreateProfile, requestLogin } from "../api/auth";
 import { useAccountStore } from "../store/accountStore";
 import { useLocation } from "wouter";
+import form from "antd/es/form";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faChevronLeft } from "@fortawesome/free-solid-svg-icons";
+import { MenuBar } from "../common/MenuBar/MenuBar";
 
-type CreateProfileType = { 
-  name:string,
+type LoginForm = { 
   mobile: string,
-  gender: string,
-  avatar_url: string,
-  email: string,
-  google_id: string,
-  studentList: []
+  password: string
 }
 
 export const LoginPage:FC = () => {
+  const [form] = Form.useForm<LoginForm>();
   const {profile, setProfile} = useAccountStore();
   const [, navigate] = useLocation();
 
   const [creatingModal, setCreatingModal] = useState<boolean>(false);
-  const [tmpProfileRequest, setTmpProfileRequest] = useState<CreateProfileType | null>(null);
   const [tmpFormData, setTmpFormData] = useState<ParentFormValues | null>(null);
 
   useEffect(() => {
@@ -62,7 +61,7 @@ export const LoginPage:FC = () => {
     setCreatingModal(true);
     if(!formValues.students.length) {
       openNotification("error", "Thiếu học sinh", "Hãy khai báo ít nhất 1 học sinh!")
-    } else if(tmpProfileRequest) {
+    } else {
       let studentRequest:CreateProfileStudentRequest[] = [];
       formValues.students.forEach(student => {
         studentRequest.push({
@@ -78,15 +77,12 @@ export const LoginPage:FC = () => {
         name: formValues.name,
         mobile: formValues.phone,
         gender: formValues.gender,
-        avatar_url: tmpProfileRequest.avatar_url,
-        email: tmpProfileRequest.email,
-        google_id: tmpProfileRequest.google_id,
+        password: formValues.password,
         studentList: studentRequest
       }
       const createProfileRequest = await requestCreateProfile<CreateProfileResponse>(createRequest);
-      console.log(createProfileRequest)
       if(createProfileRequest.error) {
-        openNotification("error", "Lỗi", "Đã xảy ra lỗi khi tạo tài khoản")
+        openNotification("error", "Lỗi", getErrorText(createProfileRequest.error))
       } else if(createProfileRequest.items) {
         setProfile(createProfileRequest.items.user);
         saveSession(createProfileRequest.items.session);
@@ -97,78 +93,85 @@ export const LoginPage:FC = () => {
     setCreatingModal(false);
   }
 
-  const handleGoogleLogin = async(res:CredentialResponse) => {
-    if (!res.credential) {
-      openNotification("error", "Lỗi đăng nhập", "Đăng nhập bằng Google thất bại!")
-    } else {
-      try {
-        const payload = await verifyGoogleIdToken(res.credential);
-        const checkLogin = await requestLogin<LoginResponse>(payload.sub);
-        if(checkLogin.error) {
-          openNotification("error", "Lỗi đăng nhập", "Đăng nhập bằng Google thất bại, hãy thử lại sau!")
-        } else if (checkLogin.items) {
-          const loginStatus = checkLogin.items.status;
-          switch (loginStatus) {
-            case "sign-up":
-              setTmpProfileRequest({
-                name: "",
-                gender: "",
-                mobile: "",
-                avatar_url: payload.picture,
-                email: payload.email,
-                google_id: payload.sub,
-                studentList: []
-              });
-              setTmpFormData({
-                name: `${payload.family_name} ${payload.given_name}`,
-                phone: "",
-                gender: "",
-                students: []
-              })
-              break;
-            case "success":
-              if(checkLogin.items.user && checkLogin.items.session) {
-                setProfile(checkLogin.items.user);
-                saveSession(checkLogin.items.session);
-                openNotification("success", "Thành công", "Đăng nhập thành công");
-                navigate("/course");
-              }
-              break;
-            default:
-              break;
-          }
-          
-        }
-      } catch (err) {
-        openNotification("error", "Lỗi đăng nhập", "Đăng nhập bằng Google thất bại, hãy thử lại sau!")
-      }
+  const handleLogin = async(values:LoginForm) => {
+    const checkLogin = await requestLogin<LoginResponse>(values.mobile, values.password);
+    if(checkLogin.error) {
+      openNotification("error", "Lỗi", getErrorText(checkLogin.error))
+    } else if(checkLogin.items && checkLogin.items.user && checkLogin.items.session) {
+      setProfile(checkLogin.items.user);
+      saveSession(checkLogin.items.session);
+      openNotification("success", "Thành công", "Đăng nhập thành công");
+      navigate("/course");
     }
+  }
+
+  const toggleSignUp = () => {
+    setTmpFormData({
+      name: "",
+      password: "",
+      retypePassword: "",
+      phone: "",
+      gender: "",
+      students: []
+    })
+  }
+  const backToSignIn = () => {
+    setTmpFormData(null)
   }
 
   return (
     <>
+      <MenuBar />
       <div className="login-bg">
-        {tmpProfileRequest && tmpFormData ? (
+        {tmpFormData ? (
           <div className="login-box" style={{width: "800px"}}>
-            <div className="login-title" style={{marginBottom: "15px"}}>Khai báo phụ huynh và học sinh</div>
+            <div className="login-title">Đăng ký tài khoản</div>
+            <div className="login-form" style={{marginBottom: "15px"}}>
+              <Button color="primary" variant="text" onClick={() => backToSignIn()}><FontAwesomeIcon icon={faChevronLeft} /> Quay lại đăng nhập</Button>
+            </div>
             <UserFormComponent
+              formType="register"
               defaultValues={tmpFormData}
               submitForm={(values) => handleCreateProfile(values)}
             />
           </div>
         ) : (
           <div className="login-box">
-            <div className="login-title">Đăng nhập</div>
-            <div className="login-desc">Quý phụ huynh hãy đăng nhập để có thể đăng ký khoá học.</div>
-            <div className="login-button-container">
-              <GoogleLogin
-                onSuccess={credentialResponse => {
-                  handleGoogleLogin(credentialResponse);
-                }}
-                onError={() => {
-                  openNotification("error", "Lỗi đăng nhập", "Đăng nhập bằng Google thất bại, hãy thử lại sau!")
-                }}
-              />
+            <div className="login-title" style={{marginBottom: "15px"}}>Đăng nhập</div>
+            <Form
+              form={form}
+              name="login"
+              layout="vertical"
+              onFinish={handleLogin}
+              style={{ maxWidth: 360, margin: '0 auto' }}
+            >
+              <Form.Item
+                label="Số điện thoại"
+                name="mobile"
+                rules={[
+                  { required: true, message: 'Hãy nhập số điện thoại' },
+                  { pattern: vietnamPhoneRegex, message: 'Số điện thoại không hợp lệ' },
+                ]}
+              >
+                <Input placeholder="Nhập số điện thoại" />
+              </Form.Item>
+
+              <Form.Item
+                name="password"
+                label="Mật khẩu"
+                rules={[{ required: true, message: 'Hãy nhập mật khẩu' }]}
+              >
+                <Input.Password placeholder="Nhập mật khẩu" />
+              </Form.Item>
+
+              <Form.Item style={{marginBottom: "10px"}}>
+                <Button type="primary" htmlType="submit" block>
+                  Đăng nhập
+                </Button>
+              </Form.Item>
+            </Form>
+            <div className="login-form">
+              <Button color="primary" variant="text" onClick={() => toggleSignUp()}>Đăng ký tài khoản</Button>
             </div>
           </div>
         )}

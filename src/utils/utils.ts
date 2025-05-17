@@ -1,7 +1,9 @@
 // src/utils/verifyGoogleIdToken.ts
 import { createRemoteJWKSet, JWTPayload, jwtVerify } from 'jose';
 import { SessionType } from '../api/auth';
-import {format} from 'date-fns';
+import {Duration, format, formatDuration, intervalToDuration} from 'date-fns';
+import { TZDate } from "@date-fns/tz";
+import { vi } from 'date-fns/locale';
 
 const JWKS = createRemoteJWKSet(
   new URL('https://www.googleapis.com/oauth2/v3/certs')
@@ -51,6 +53,20 @@ export const getSession = ():SessionType | null => {
     return null
   }
 }
+export const getAdminSession = ():string | null => {
+  const getSession = window.localStorage.getItem("admin-session");
+  if(getSession) {
+    return getSession;
+  } else {
+    return null
+  }
+}
+export const saveAdminSession = (session:string) => {
+  window.localStorage.setItem("admin-session", session)
+}
+export const removeAdminSession = () => {
+  window.localStorage.removeItem("admin-session")
+}
 
 export const getDay = (day: string): string => {
   const mapping: Record<string, string> = {
@@ -66,6 +82,15 @@ export const getDay = (day: string): string => {
   return mapping[day];
 }
 
+export const getGender = (code: string): string => {
+  const mapping: Record<string, string> = {
+    female: "Nữ",
+    male: "Nam"
+  };
+
+  return mapping[code];
+}
+
 export const formatPrice = (numStr: number): string => {
   const n = Number(numStr)
   return isNaN(n)
@@ -75,6 +100,10 @@ export const formatPrice = (numStr: number): string => {
 
 export const convertDate = (date:string) => {
   return format(new Date(date), "dd/MM/yyyy")
+}
+
+export const convertFullDateTime = (date:string) => {
+  return format(new TZDate(new Date(date), "Asia/Ho_Chi_Minh"), "EEEE, dd/MM/yyyy HH:mm", {locale: vi})
 }
 
 export const convertTime = (time:string) => {
@@ -87,4 +116,37 @@ export const registerError = (code:string) => {
   
     default: return "Lỗi không xác định"
   }
+}
+
+export const getErrorText = (code: string): string => {
+  const mapping: Record<string, string> = {
+    MOBILE_EXISTED: "Số điện thoại đã tồn tại trong hệ thống",
+    LOGIN_INFO_MISSING: "Thông tin đăng nhập chưa đầy đủ",
+    INVALID_CREDENTIAL: "Thông tin đăng nhập không đúng, vui lòng kiểm tra lại thông tin"
+  };
+
+  if(mapping[code]) {
+    return mapping[code];
+  } else {
+    return "Đã xảy ra lỗi không xác định"
+  }
+}
+
+export function formatTimeDifference(
+  start: Date | number,
+  end: Date | number
+): string {
+  // Ensure we have Date objects
+  const startDate = start instanceof Date ? start : new Date(start);
+  const endDate   = end   instanceof Date ? end   : new Date(end);
+
+  // Compute the duration parts
+  const duration: Duration = intervalToDuration({ start: startDate, end: endDate });
+
+  // Format only days, hours, and minutes; skip units that are zero
+  return formatDuration(duration, {
+    format:    ['days', 'hours', 'minutes'],
+    delimiter: ' ',
+    locale: vi
+  });
 }

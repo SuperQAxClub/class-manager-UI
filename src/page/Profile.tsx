@@ -58,6 +58,9 @@ export const ProfilePage:FC = () => {
         })
         const tmpFormData:ParentFormValues = {
           name: profile.name,
+          oldPassword: "",
+          password: "",
+          retypePassword: "",
           gender: profile.gender,
           phone: profile.mobile,
           students: tmpStudents
@@ -85,11 +88,11 @@ export const ProfilePage:FC = () => {
       const updateRequest:UpdateProfileRequest = {
         id: profile.id,
         name: formValues.name,
+        password: formValues.password || null,
         mobile: formValues.phone,
         gender: formValues.gender,
         studentList: studentRequest
       }
-      console.log(updateRequest)
       const updateProfileRequest = await requestUpdateProfile<StatusResponse>(updateRequest);
       if(updateProfileRequest.error) {
         openNotification("error", "Lỗi", "Đã xảy ra lỗi khi cập nhật thông tin")
@@ -118,6 +121,7 @@ export const ProfilePage:FC = () => {
           <div className="box-container">
             <div className="box-title">Khai báo phụ huynh và học sinh</div>
             <UserFormComponent
+              formType="update"
               defaultValues={tmpFormData}
               submitForm={(values) => handleUpdateProfile(values)}
             />

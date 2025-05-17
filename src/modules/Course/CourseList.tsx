@@ -31,7 +31,7 @@ export const CourseItemDetails:FC<CourseItem> = ({course, status}) => {
                       <div className="title-tag orange">Đang xác minh</div>
                     ) : ""}
                     {status === "admin-pending" ? (
-                      <div className="title-tag orange">Cần xác minh</div>
+                      <div className="title-tag orange">Cần xác nhận</div>
                     ) : ""}
                   </div>
                 ) : ""}

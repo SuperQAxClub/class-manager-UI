@@ -10,11 +10,9 @@ export type CreateProfileStudentRequest = {
 }
 export type CreateProfileRequest = {
   name: string,
+  password: string,
   mobile: string,
   gender: string,
-  avatar_url: string,
-  email: string,
-  google_id: string,
   studentList: CreateProfileStudentRequest[]
 }
 
@@ -30,6 +28,7 @@ export type UpdateProfileStudentRequest = {
 export type UpdateProfileRequest = {
   id: string,
   name: string,
+  password: string | null,
   mobile: string,
   gender: string,
   studentList: UpdateProfileStudentRequest[]
@@ -40,9 +39,6 @@ export type ProfileType = {
   name: string,
   mobile: string,
   gender: string,
-  avatar_url: string,
-  email: string,
-  google_id: string
 }
 export type SessionType = {
   id: string,
@@ -83,12 +79,12 @@ export type RegisterResponse = StatusResponse & {
 
 export const requestCreateProfile = async<T = any>(request:CreateProfileRequest):Promise<FetchResult<T>> => {
   try {
-    const items = await apiRequest<T>("POST", "/auth", {data: request});
+    const items = await apiRequest<T>("POST", "/auth/register", {data: request});
     return { items, error: null };
   } catch (err: unknown) {
-    let message = 'An unexpected error occurred';
+    let message = "UNKNOWN";
     if (err instanceof ApiError) {
-      message = `Server returned ${err.status}: ${JSON.stringify(err.data)}`;
+      message = err.data.error;
     }
     return { items: null, error: message };
   }
@@ -98,22 +94,22 @@ export const requestUpdateProfile = async<T = any>(request:UpdateProfileRequest)
     const items = await apiRequest<T>("POST", "/auth/update-profile", {data: request});
     return { items, error: null };
   } catch (err: unknown) {
-    let message = 'An unexpected error occurred';
+    let message = "UNKNOWN";
     if (err instanceof ApiError) {
-      message = `Server returned ${err.status}: ${JSON.stringify(err.data)}`;
+      message = err.data.error;
     }
     return { items: null, error: message };
   }
 }
 
-export const requestLogin = async<T = any>(google_id:string):Promise<FetchResult<T>> => {
+export const requestLogin = async<T = any>(mobile:string, password:string):Promise<FetchResult<T>> => {
   try {
-    const items = await apiRequest<T>("POST", "/auth/login", {data: {google_id: google_id}});
+    const items = await apiRequest<T>("POST", "/auth/login", {data: {mobile, password}});
     return { items, error: null };
   } catch (err: unknown) {
-    let message = 'An unexpected error occurred';
+    let message = "UNKNOWN";
     if (err instanceof ApiError) {
-      message = `Server returned ${err.status}: ${JSON.stringify(err.data)}`;
+      message = err.data.error;
     }
     return { items: null, error: message };
   }

@@ -8,8 +8,7 @@ import { GoogleOAuthProvider } from '@react-oauth/google'
 import '@ant-design/v5-patch-for-react-19';
 
 createRoot(document.getElementById('root')!).render(
-  <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID}>
-    <StrictMode>
+  <StrictMode>
     <ConfigProvider
       theme={{
         token: {
@@ -20,5 +19,4 @@ createRoot(document.getElementById('root')!).render(
       <App />
     </ConfigProvider>
   </StrictMode>
-  </GoogleOAuthProvider>,
 )

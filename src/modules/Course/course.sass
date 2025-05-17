@@ -156,3 +156,71 @@
   .modal-center-desc
     font-size: 14pt
     text-align: center
+.registration-container
+  margin-top: 15px
+  .title-tag
+    background: $main-color
+    border-radius: 5px
+    padding: 2px 7px
+    text-transform: uppercase
+    color: #fff
+    font-size: 10pt
+    font-weight: 600
+    &.red
+      background: $primary-red
+    &.orange
+      background: $primary-orange
+    &.green
+      background: $primary-light-green
+  .reg-parent
+    @include main-box
+    padding: 10px 15px
+    margin-bottom: 15px
+    .parent-info
+      padding-bottom: 10px
+      margin-bottom: 10px
+      border-bottom: 1px solid $border-color
+      .info-basic
+        font-size: 16pt
+        font-weight: 600
+        .title-tag
+          margin-right: 10px
+          position: relative
+          top: -3px
+        .parent-name
+          color: $main-color
+      .info-status
+        font-size: 14pt
+    .student-list
+      font-size: 12pt
+      .student-item
+        display: flex
+        align-items: center
+        gap: 15px
+        padding-bottom: 10px
+        margin-bottom: 10px
+        border-bottom: 1px solid $border-color
+        &:last-child
+          border-bottom: none
+          margin-bottom: 0
+          padding-bottom: 0
+        .student-info
+          flex: 1
+          display: flex
+          flex-direction: column
+          gap: 2px
+          .student-header
+            display: inline-flex
+            align-items: center
+            gap: 10px
+            .item-school
+              font-weight: 600
+          .student-name
+            b
+              color: $main-color
+        .student-action
+          flex: 0 0 161px
+          display: inline-flex
+          gap: 15px
+          align-items: center
+          justify-content: flex-end

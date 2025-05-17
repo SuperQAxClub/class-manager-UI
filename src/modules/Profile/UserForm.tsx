@@ -10,6 +10,9 @@ const { Option } = Select;
 
 export type ParentFormValues = {
   name: string;
+  oldPassword?: string;
+  password: string;
+  retypePassword: string;
   gender: string;
   phone: string;
   students: Student[];
@@ -25,9 +28,10 @@ export type Student = {
   studentName: string;
 }
 
-const vietnamPhoneRegex = /^(0|\+84)(3[2-9]|5[6,8,9]|7[0,6-9]|8[1-5]|9[0-9])[0-9]{7}$/;
+export const vietnamPhoneRegex = /^(0|\+84)(3[2-9]|5[6,8,9]|7[0,6-9]|8[1-5]|9[0-9])[0-9]{7}$/;
 
 type UserFormComponentType = {
+  formType: string,
   defaultValues:ParentFormValues,
   submitForm: (values:ParentFormValues) => void
 }
@@ -53,7 +57,7 @@ export type SchoolType = {
 }
 
 export const UserFormComponent:FC<UserFormComponentType> = ({
-  defaultValues, submitForm
+  formType, defaultValues, submitForm
 }) => {
   const [form] = Form.useForm<ParentFormValues>();
   const [schoolData, setSchoolData] = useState<SchoolType[]>([]);
@@ -145,15 +149,17 @@ export const UserFormComponent:FC<UserFormComponentType> = ({
             label="Tên phụ huynh"
             name="name"
             rules={[{ required: true, message: 'Hãy nhập tên' }]}
+            hasFeedback
           >
             <Input placeholder="Nhập tên phụ huynh" />
           </Form.Item>
         </Col>
-        <Col xs={24} sm={6} lg={5}>
+        <Col xs={24} sm={4}>
           <Form.Item
             label="Giới tính"
             name="gender"
             rules={[{ required: true, message: 'Hãy chọn giới tính' }]}
+            hasFeedback
           >
             <Select placeholder="Chọn giới tính">
               <Option value="male">Nam</Option>
@@ -161,7 +167,7 @@ export const UserFormComponent:FC<UserFormComponentType> = ({
             </Select>
           </Form.Item>
         </Col>
-        <Col xs={24} sm={6} lg={7}>
+        <Col xs={24} sm={8}>
           <Form.Item
             label="Số điện thoại"
             name="phone"
@@ -169,10 +175,99 @@ export const UserFormComponent:FC<UserFormComponentType> = ({
               { required: true, message: 'Hãy nhập số điện thoại' },
               { pattern: vietnamPhoneRegex, message: 'Số điện thoại không hợp lệ' },
             ]}
+            hasFeedback
           >
             <Input placeholder="Nhập số điện thoại" />
           </Form.Item>
         </Col>
+        {formType === "register" ? (
+          <Fragment>
+            <Col xs={24} sm={12}>
+              <Form.Item
+                label="Mật khẩu"
+                name="password"
+                rules={[{ required: true, message: 'Hãy nhập mật khẩu' }]}
+                hasFeedback
+              >
+                <Input.Password placeholder="Nhập mật khẩu" />
+              </Form.Item>
+            </Col>
+            <Col xs={24} sm={12}>
+              <Form.Item
+                label="Nhập lại mật khẩu"
+                name="retypePassword"
+                rules={[
+                  { required: true, message: 'Hãy nhập lại mật khẩu' },
+                  ({ getFieldValue }) => ({
+                    validator(_, value) {
+                      if (!value || getFieldValue('password') === value) {
+                        return Promise.resolve();
+                      }
+                      return Promise.reject(new Error('Mật khẩu không khớp!'));
+                    },
+                  })
+                ]}
+                hasFeedback
+              >
+                <Input.Password placeholder="Nhập mật khẩu" />
+              </Form.Item>
+            </Col>
+          </Fragment>
+        ) : ""}
+        {formType === "update" ? (
+          <Col xs={24}>
+            <div className="form-note">Nếu quý phụ huynh muốn thay đổi mật khẩu, hãy nhập vào các ô mật khẩu ở dưới. Nếu quý phụ huynh chỉ muốn cập nhật thông tin, hãy đảm bảo các ô mật khẩu đều bỏ trống.</div>
+            <Form.Item shouldUpdate>
+              {({ getFieldValue }) => {
+                const oldPassword = getFieldValue(['oldPassword']);
+                return (
+                  <Row gutter={16}>
+                    <Col xs={24} sm={8}>
+                      <Form.Item
+                        label="Mật khẩu cũ"
+                        name="oldPassword"
+                        rules={[{ message: 'Hãy nhập mật khẩu cũ' }]}
+                        hasFeedback
+                      >
+                        <Input.Password placeholder="Nhập mật khẩu" />
+                      </Form.Item>
+                    </Col>
+                    <Col xs={24} sm={8}>
+                      <Form.Item
+                        label="Mật khẩu mới"
+                        name="password"
+                        rules={[{required: !!oldPassword, message: 'Hãy nhập mật khẩu mới' }]}
+                        hasFeedback
+                      >
+                        <Input.Password placeholder="Nhập mật khẩu" />
+                      </Form.Item>
+                    </Col>
+                    <Col xs={24} sm={8}>
+                      <Form.Item
+                        label="Nhập lại mật khẩu mới"
+                        name="retypePassword"
+                        rules={[
+                          { required: !!oldPassword, message: 'Hãy nhập lại mật khẩu' },
+                          ({ getFieldValue }) => ({
+                            validator(_, value) {
+                              if (!value || getFieldValue('password') === value || !!!oldPassword) {
+                                return Promise.resolve();
+                              }
+                              return Promise.reject(new Error('Mật khẩu mới không khớp!'));
+                            },
+                          })
+                        ]}
+                        hasFeedback
+                      >
+                        <Input.Password placeholder="Nhập mật khẩu" />
+                      </Form.Item>
+                    </Col>
+                  </Row>
+                )
+              }}
+            </Form.Item>
+          </Col>
+        ) : ""}
       </Row>
 
       <Form.List name="students">
@@ -210,6 +305,7 @@ export const UserFormComponent:FC<UserFormComponentType> = ({
                               label="Trường"
                               name={[name, 'school']}
                               rules={[{ required: true, message: 'Hãy chọn trường' }]}
+                              hasFeedback
                             >
                               {schoolMenu.length ? (
                                 <Select placeholder="Chọn trường" onChange={(selectedSchool) => getSchoolClass(selectedSchool, grade)}>
@@ -227,6 +323,7 @@ export const UserFormComponent:FC<UserFormComponentType> = ({
                               label="Tên học sinh"
                               name={[name, 'studentName']}
                               rules={[{ required: true, message: 'Hãy nhập tên học sinh' }]}
+                              hasFeedback
                             >
                               <Input placeholder="Nhập tên học sinh" />
                             </Form.Item>
@@ -238,6 +335,7 @@ export const UserFormComponent:FC<UserFormComponentType> = ({
                               label="Khối"
                               name={[name, 'grade']}
                               rules={[{ required: true, message: 'Hãy chọn khối' }]}
+                              hasFeedback
                             >
                               {schoolGradeMenu.length ? (
                                 <Select placeholder="Khối">
@@ -255,6 +353,7 @@ export const UserFormComponent:FC<UserFormComponentType> = ({
                                 label="Lớp"
                                 name={[name, 'class']}
                                 rules={[{ required: true, message: 'Hãy chọn lớp' }]}
+                                hasFeedback
                               >
                                 <Select placeholder="Lớp">
                                   {getSchoolClass(school, grade).map(item => (
@@ -271,6 +370,7 @@ export const UserFormComponent:FC<UserFormComponentType> = ({
                               label="Giới tính"
                               name={[name, 'gender']}
                               rules={[{ required: true, message: 'Hãy chọn giới tính' }]}
+                              hasFeedback
                             >
                               <Select placeholder="Giới tính">
                                 <Option value="male">Nam</Option>
@@ -286,6 +386,7 @@ export const UserFormComponent:FC<UserFormComponentType> = ({
                                 name={[name, 'studentCode']}
                                 rules={[{ required: true, message: 'Hãy nhập mã học sinh' }]}
                                 dependencies={[['students', name, 'school'], ['students', name, 'grade']]}
+                                hasFeedback
                               >
                                 <Input placeholder="Nhập mã học sinh" />
                               </Form.Item>
@@ -314,11 +415,12 @@ export const UserFormComponent:FC<UserFormComponentType> = ({
         )}
       </Form.List>
 
-      {/* Nút gửi form */}
       <Form.Item style={{marginBottom: 0}}>
-        <Button type="primary" htmlType="submit">
-          Lưu thông tin
-        </Button>
+        <div className='login-form'>
+          <Button type="primary" htmlType="submit">
+            Lưu thông tin
+          </Button>
+        </div>
       </Form.Item>
     </Form>
   );

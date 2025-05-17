@@ -49,7 +49,9 @@ export const MenuBar:FC = () => {
       <div className="top-navbar">
         <div className="navbar-left">
           <div className="nav-item">
-            <div className="item-title">BTGROUP</div>
+            <Link to="/">
+              <div className="item-title">BTGroup</div>
+            </Link>
           </div>
         </div>
         <div className="navbar-right">

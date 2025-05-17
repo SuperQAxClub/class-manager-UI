@@ -48,6 +48,8 @@ body
       text-align: center
       padding-top: 10px
       padding-bottom: 15px
+      &.error
+        color: $primary-red
     .login-button-container
       display: grid
       place-items: center
@@ -82,3 +84,48 @@ body
   width: 100%
   height: auto
   background-size: contain
+.login-form
+  text-align: center
+.form-note
+  font-size: 12pt
+  font-weight: 600
+  margin-bottom: 15px
+.home-content
+  display: flex
+  flex-direction: column
+  justify-content: center
+  gap: 15px
+  height: 100%
+  .content-text
+    display: flex
+    flex-direction: column
+    gap: 5px
+    font-size: 16pt
+    @include media(xs)
+      font-size: 14pt
+    .text-title
+      font-size: 26pt
+      font-weight: 700
+      @include media(xs)
+        font-size: 18pt
+    .text-desc
+      font-size: 16pt
+      font-weight: 600
+      color: $main-color
+      @include media(xs)
+        font-size: 18pt
+  .content-signup
+    button
+      font-size: 20pt
+      height: auto
+      font-weight: 700
+      padding: 10px 20px
+  .content-bottom
+    display: inline-flex
+    gap: 15px
+.home-hero-center
+  @include media(xs)
+    margin-top: 20px
+  img
+    width: 100%
+    height: auto

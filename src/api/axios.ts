@@ -1,5 +1,5 @@
 import axios, { AxiosInstance, AxiosRequestConfig, Method } from 'axios';
-import { getSession } from '../utils/utils';
+import { getAdminSession, getSession } from '../utils/utils';
 
 interface RequestOptions {
   data?: unknown;
@@ -39,9 +39,9 @@ export class ApiError extends Error {
 }
 
 axiosInstance.interceptors.request.use(config => {
-  const session = getSession();
+  const session = getAdminSession();
   if (session) {
-    config.headers.Authorization = `Bearer ${session.id}`;
+    config.headers.Authorization = `Bearer ${session}`;
   }
   return config;
 }, error => Promise.reject(error));
