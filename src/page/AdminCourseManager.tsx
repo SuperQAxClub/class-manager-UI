@@ -5,10 +5,22 @@ import { useAccountStore } from "../store/accountStore";
 import { useLocation } from "wouter";
 import { Button, Col, Collapse, CollapseProps, Modal, notification, Popconfirm, Row, Tag } from "antd";
 import { CourseResponse } from "../api/school";
-import { convertDate, convertFullDateTime, formatPrice, formatTimeDifference, getGender } from "../utils/utils";
+import { convertDate, convertDateDot, convertFullDateTime, exportToExcel, formatPrice, formatTimeDifference, getGender } from "../utils/utils";
 import { CourseRegistrationResponse, requestAdminCourseList, requestAdminCourseRegistration, requestAdminCourseRegistrationStatusUpdate } from "../api/admin";
 import "../modules/Course/course.sass";
-import { isAfter, isBefore } from "date-fns";
+import { format, isAfter, isBefore } from "date-fns";
+
+type RegistrationReport = {
+  studentName: string,
+  studentGender: string,
+  studentSchool: string,
+  studentClass: string,
+  course: string,
+  parentName: string,
+  parentGender: string,
+  parentMobile: string,
+  fee: number
+}
 
 const CourseItems:FC = () => {
   const [, navigate] = useLocation();
@@ -84,6 +96,42 @@ const CourseItems:FC = () => {
     }
   }
 
+  const downloadReport = () => {
+    if(selectedCourse && registrationList.length) {
+      let data:RegistrationReport[] = [];
+      let dataKeyOrder: string[] = [
+        'studentName',
+        'studentGender',
+        'studentSchool',
+        'studentClass',
+        'course',
+        'parentName',
+        'parentGender',
+        'parentMobile',
+        'fee'
+      ]
+      let dataHeader:string[] = ["Tên học sinh", "Giới tính học sinh", "Trường", "Lớp", "Khoá học", "Tên phụ huynh", "Giới tính phụ huynh", "SĐT phụ huynh", "Học phí"];
+      registrationList.forEach(parent => {
+        parent.studentList.forEach(student => {
+          if(student.status === "confirmed") {
+            data.push({
+              studentName: student.name,
+              studentGender: getGender(student.gender),
+              studentSchool: student.school || "Trường khác",
+              studentClass: student.class || "",
+              course: `${selectedCourse.name}`,
+              parentName: parent.parentName,
+              parentGender: getGender(parent.parentGender),
+              parentMobile: parent.parentMobile,
+              fee: student.fee
+            })
+          }
+        })
+      })
+      exportToExcel(data, dataKeyOrder, dataHeader, `Thống kê ${selectedCourse.name} (${convertDateDot(selectedCourse.start_date)} - ${convertDateDot(selectedCourse.end_date)})`)
+    }
+  }
+
   return (
     <>
       <Row gutter={[16, 16]}>
@@ -114,6 +162,7 @@ const CourseItems:FC = () => {
             {selectedCourse ? (
               <Fragment>
                 <CourseItemDetails course={selectedCourse} />
+                <Button color="primary" variant="solid" style={{marginTop: '15px'}} onClick={() => downloadReport()}>Tải về thống kê đăng ký</Button>
                 <div className="registration-container">
                   {registrationList.map((reg) => {
                     let totalFee = 0;
@@ -214,6 +263,7 @@ export const AdminCourseManager:FC = () => {
     <>
       <MenuBar />
       <div className="main-container">
+        <div className="main-title">Quản lý đăng ký</div>
         <Collapse items={subjectList} defaultActiveKey={['1']}  />
       </div>
     </>

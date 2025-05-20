@@ -4,6 +4,8 @@ import { SessionType } from '../api/auth';
 import {Duration, format, formatDuration, intervalToDuration} from 'date-fns';
 import { TZDate } from "@date-fns/tz";
 import { vi } from 'date-fns/locale';
+import * as XLSX from 'xlsx';
+import { saveAs } from 'file-saver';
 
 const JWKS = createRemoteJWKSet(
   new URL('https://www.googleapis.com/oauth2/v3/certs')
@@ -101,6 +103,9 @@ export const formatPrice = (numStr: number): string => {
 export const convertDate = (date:string) => {
   return format(new Date(date), "dd/MM/yyyy")
 }
+export const convertDateDot = (date:string) => {
+  return format(new Date(date), "dd.MM.yyyy")
+}
 
 export const convertFullDateTime = (date:string) => {
   return format(new TZDate(new Date(date), "Asia/Ho_Chi_Minh"), "EEEE, dd/MM/yyyy HH:mm", {locale: vi})
@@ -149,4 +154,42 @@ export function formatTimeDifference(
     delimiter: ' ',
     locale: vi
   });
+}
+
+export function exportToExcel<T>(
+  data: T[],            // your raw data
+  fields: string[],     // the object keys, in the order you want
+  headers: string[],    // the custom column names (must match `fields.length`)
+  fileName = 'export'   // desired file name (without extension)
+) {
+  // 1) Build a sheet from your data, but skip the built-in header row
+  const ws = XLSX.utils.json_to_sheet(data, {
+    header: fields,
+    skipHeader: false
+  });
+
+  // 2) Prepend your custom header row at A1
+  XLSX.utils.sheet_add_aoa(ws, [headers], { origin: 'A1' });
+
+  // 3) Auto-compute column widths (wch = “width in characters”)
+  ws['!cols'] = fields.map((key, i) => {
+    // length of header text
+    const h = headers[i]?.toString().length ?? 0;
+    // max length of any cell in this column
+    const maxCell = data.reduce((max, row) => {
+      const v = row[key as keyof T];
+      const len = v != null ? String(v).length : 0;
+      return Math.max(max, len);
+    }, 0);
+    // give a little padding
+    return { wch: Math.max(h, maxCell) + 2 };
+  });
+
+  // 4) Create a workbook, append the sheet, write array buffer
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Sheet1');
+  const buf = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+
+  // 5) Trigger browser download
+  saveAs(new Blob([buf], { type: 'application/octet-stream' }), `${fileName}.xlsx`);
 }
